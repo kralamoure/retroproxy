@@ -105,6 +105,7 @@ LOOP:
 			break LOOP
 		case msg := <-msgs:
 			logger.Debugw("received message",
+				"server", "login",
 				"message", msg,
 			)
 		}
