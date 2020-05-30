@@ -115,7 +115,7 @@ LOOP:
 func loadVars() {
 	flag.BoolVar(&development, "d", false, "Enable development mode")
 	flag.StringVar(&address, "a", "34.251.172.139:443", "Dofus login server address")
-	flag.StringVar(&version, "v", "1.32.1", "Dofus version")
+	flag.StringVar(&version, "v", "1.32.1", "Dofus client version")
 	flag.Parse()
 }
 
