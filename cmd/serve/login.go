@@ -153,7 +153,7 @@ func handlePktFromLoginClient(sess session, pkt string) error {
 	switch id {
 	case d1proto.AccountSetServer:
 		msg := &msgcli.AccountSetServer{}
-		err := msg.Deserialize(pkt)
+		err := msg.Deserialize(strings.TrimPrefix(pkt, string(d1proto.AccountSetServer)))
 		if err != nil {
 			return err
 		}
