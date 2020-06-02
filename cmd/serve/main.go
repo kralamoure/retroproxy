@@ -29,6 +29,11 @@ var (
 	address     string
 )
 
+type session struct {
+	clientConn net.Conn
+	serverConn net.Conn
+}
+
 func run() (exitCode int) {
 	loadVars()
 
@@ -137,6 +142,11 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 	)
 	defer serverConn.Close()
 
+	sess := session{
+		clientConn: conn,
+		serverConn: serverConn,
+	}
+
 	serverMsgCh := make(chan string)
 	go func() {
 		rd := bufio.NewReader(serverConn)
@@ -153,7 +163,7 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 
 	clientMsgCh := make(chan string)
 	go func() {
-		rd := bufio.NewReader(conn)
+		rd := bufio.NewReader(sess.clientConn)
 		for {
 			msg, err := rd.ReadString('\x00')
 			if err != nil {
@@ -164,14 +174,13 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 			clientMsgCh <- msg
 		}
 	}()
-	// sendMsgToLoginClient(conn, "HCdfghjfdkjgjfdigjiorfjwoeifeyhgfh")
 
 	for {
 		select {
 		case msg := <-clientMsgCh:
-			handleMsgFromLoginClient(conn, serverConn, msg)
+			handleMsgFromLoginClient(sess, msg)
 		case msg := <-serverMsgCh:
-			handleMsgFromLoginServer(serverConn, conn, msg)
+			handleMsgFromLoginServer(sess, msg)
 		case err := <-errCh:
 			return err
 		case <-ctx.Done():
@@ -180,37 +189,37 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 	}
 }
 
-func handleMsgFromLoginClient(clientConn net.Conn, serverConn net.Conn, msg string) {
+func handleMsgFromLoginClient(sess session, msg string) {
 	logger.Debugw("received message from login client",
-		"client_address", clientConn.RemoteAddr().String(),
+		"client_address", sess.clientConn.RemoteAddr().String(),
 		"message", msg,
 	)
-	sendMsgToLoginServer(serverConn, msg)
+	sendMsgToLoginServer(sess, msg)
 }
 
-func handleMsgFromLoginServer(serverConn net.Conn, clientConn net.Conn, msg string) {
+func handleMsgFromLoginServer(sess session, msg string) {
 	logger.Debugw("received message from login server",
-		"server_address", serverConn.RemoteAddr().String(),
-		"client_address", clientConn.RemoteAddr().String(),
+		"server_address", sess.serverConn.RemoteAddr().String(),
+		"client_address", sess.clientConn.RemoteAddr().String(),
 		"message", msg,
 	)
-	sendMsgToLoginClient(clientConn, msg)
+	sendMsgToLoginClient(sess, msg)
 }
 
-func sendMsgToLoginClient(conn net.Conn, msg string) {
+func sendMsgToLoginClient(sess session, msg string) {
 	logger.Debugw("sent message to login client",
-		"client_address", conn.RemoteAddr().String(),
+		"client_address", sess.clientConn.RemoteAddr().String(),
 		"message", msg,
 	)
-	fmt.Fprint(conn, msg+"\x00")
+	fmt.Fprint(sess.clientConn, msg+"\x00")
 }
 
-func sendMsgToLoginServer(conn net.Conn, msg string) {
+func sendMsgToLoginServer(sess session, msg string) {
 	logger.Debugw("sent message to login server",
-		"server_address", conn.RemoteAddr().String(),
+		"server_address", sess.serverConn.RemoteAddr().String(),
 		"message", msg,
 	)
-	fmt.Fprint(conn, msg+"\x00")
+	fmt.Fprint(sess.serverConn, msg+"\x00")
 }
 
 func loadVars() {
