@@ -72,23 +72,23 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 		"client_address", conn.RemoteAddr().String(),
 	)
 
-	errCh := make(chan error, 1)
-
 	serverConn, err := net.Dial("tcp", address)
 	if err != nil {
 		return err
 	}
+	defer serverConn.Close()
 	logger.Infow("connected to login server",
 		"local_address", serverConn.LocalAddr().String(),
 		"server_address", serverConn.RemoteAddr().String(),
 		"client_address", conn.RemoteAddr().String(),
 	)
-	defer serverConn.Close()
 
-	sess := session{
+	sess := &session{
 		clientConn: conn,
 		serverConn: serverConn,
 	}
+
+	errCh := make(chan error, 1)
 
 	serverPktCh := make(chan string)
 	go func() {
@@ -138,33 +138,31 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 	}
 }
 
-func handlePktFromLoginClient(sess session, pkt string) error {
+func handlePktFromLoginClient(sess *session, pkt string) error {
 	logger.Debugw("received packet from login client",
 		"client_address", sess.clientConn.RemoteAddr().String(),
 		"packet", pkt,
 	)
 
 	id, ok := d1proto.MsgCliIdByPkt(pkt)
-	if !ok {
-		sendPktToLoginServer(sess, pkt)
-		return nil
-	}
-
-	switch id {
-	case d1proto.AccountSetServer:
-		msg := &msgcli.AccountSetServer{}
-		err := msg.Deserialize(strings.TrimPrefix(pkt, string(d1proto.AccountSetServer)))
-		if err != nil {
-			return err
+	if ok {
+		extra := strings.TrimPrefix(pkt, string(id))
+		switch id {
+		case d1proto.AccountSetServer:
+			msg := &msgcli.AccountSetServer{}
+			err := msg.Deserialize(extra)
+			if err != nil {
+				return err
+			}
+			sess.serverId = msg.Id
 		}
-		sess.serverId = msg.Id
 	}
 
 	sendPktToLoginServer(sess, pkt)
 	return nil
 }
 
-func handlePktFromLoginServer(sess session, pkt string) error {
+func handlePktFromLoginServer(sess *session, pkt string) error {
 	logger.Debugw("received packet from login server",
 		"server_address", sess.serverConn.RemoteAddr().String(),
 		"client_address", sess.clientConn.RemoteAddr().String(),
@@ -172,32 +170,40 @@ func handlePktFromLoginServer(sess session, pkt string) error {
 	)
 
 	id, ok := d1proto.MsgSvrIdByPkt(pkt)
-	if !ok {
-		sendPktToLoginClient(sess, pkt)
-		return nil
-	}
+	if ok {
+		extra := strings.TrimPrefix(pkt, string(id))
+		switch id {
+		case d1proto.AccountSelectServerSuccess:
+			msg := &msgsvr.AccountSelectServerSuccess{}
+			err := msg.Deserialize(extra)
+			if err != nil {
+				return err
+			}
 
-	switch id {
-	case d1proto.AccountSelectServerSuccess:
-		msg := msgsvr.AccountSelectServerPlainSuccess{
-			Host:     "localhost",
-			Port:     gameProxyPort,
-			TicketId: fmt.Sprintf("%d\n%s", sess.serverId, pkt),
+			msg2 := &msgsvr.AccountSelectServerPlainSuccess{
+				Host:   "localhost",
+				Port:   gameProxyPort,
+				Ticket: fmt.Sprintf("%d|%s|%s|%s", sess.serverId, msg.Host, msg.Port, msg.Ticket),
+			}
+			sendMsgToLoginClient(sess, msg2)
+			return nil
 		}
-		pkt, err := msg.Serialized()
-		if err != nil {
-			return err
-		}
-		sendPktToLoginClient(sess, pkt)
-		return nil
 	}
 
 	sendPktToLoginClient(sess, pkt)
-
 	return nil
 }
 
-func sendPktToLoginClient(sess session, pkt string) {
+func sendMsgToLoginClient(sess *session, msg d1proto.MsgSvr) error {
+	pkt, err := msg.Serialized()
+	if err != nil {
+		return err
+	}
+	sendPktToLoginClient(sess, fmt.Sprint(msg.ProtocolId(), pkt))
+	return nil
+}
+
+func sendPktToLoginClient(sess *session, pkt string) {
 	logger.Debugw("sent packet to login client",
 		"client_address", sess.clientConn.RemoteAddr().String(),
 		"packet", pkt,
@@ -205,7 +211,7 @@ func sendPktToLoginClient(sess session, pkt string) {
 	fmt.Fprint(sess.clientConn, pkt+"\x00")
 }
 
-func sendPktToLoginServer(sess session, pkt string) {
+func sendPktToLoginServer(sess *session, pkt string) {
 	logger.Debugw("sent packet to login server",
 		"server_address", sess.serverConn.RemoteAddr().String(),
 		"packet", pkt,

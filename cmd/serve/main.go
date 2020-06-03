@@ -11,6 +11,7 @@ import (
 	"sync"
 	"syscall"
 
+	"gitlab.com/dofuspro/d1proto/msgsvr"
 	"go.uber.org/zap"
 )
 
@@ -30,6 +31,11 @@ type session struct {
 	clientConn net.Conn
 	serverConn net.Conn
 	serverId   int
+
+	receivedFirstGamePkt bool
+	gameServerCh         chan msgsvr.AccountSelectServerSuccess
+	gameServerPktCh      chan string
+	gameServerTicket     string
 }
 
 func run() (exitCode int) {
