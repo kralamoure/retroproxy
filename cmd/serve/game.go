@@ -71,7 +71,7 @@ LOOP:
 
 func handleGameConn(ctx context.Context, conn net.Conn) error {
 	defer conn.Close()
-	logger.Debugw("new connection from game client",
+	logger.Infow("new connection from game client",
 		"client_address", conn.RemoteAddr().String(),
 	)
 
@@ -216,7 +216,7 @@ func handlePktFromGameClient(sess *session, pkt string) error {
 }
 
 func handlePktFromGameServer(sess *session, pkt string) error {
-	logger.Debugw("received packet from game server",
+	logger.Infow("received packet from game server",
 		"server_address", sess.serverConn.RemoteAddr().String(),
 		"client_address", sess.clientConn.RemoteAddr().String(),
 		"packet", pkt,
@@ -256,7 +256,7 @@ func sendPktToGameClient(sess *session, pkt string) {
 }
 
 func sendPktToGameServer(sess *session, pkt string) {
-	logger.Debugw("sent packet to game server",
+	logger.Infow("sent packet to game server",
 		"server_address", sess.serverConn.RemoteAddr().String(),
 		"packet", pkt,
 	)

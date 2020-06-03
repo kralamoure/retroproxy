@@ -68,7 +68,7 @@ LOOP:
 
 func handleLoginConn(ctx context.Context, conn net.Conn) error {
 	defer conn.Close()
-	logger.Debugw("new connection from login client",
+	logger.Infow("new connection from login client",
 		"client_address", conn.RemoteAddr().String(),
 	)
 
@@ -163,7 +163,7 @@ func handlePktFromLoginClient(sess *session, pkt string) error {
 }
 
 func handlePktFromLoginServer(sess *session, pkt string) error {
-	logger.Debugw("received packet from login server",
+	logger.Infow("received packet from login server",
 		"server_address", sess.serverConn.RemoteAddr().String(),
 		"client_address", sess.clientConn.RemoteAddr().String(),
 		"packet", pkt,
@@ -212,7 +212,7 @@ func sendPktToLoginClient(sess *session, pkt string) {
 }
 
 func sendPktToLoginServer(sess *session, pkt string) {
-	logger.Debugw("sent packet to login server",
+	logger.Infow("sent packet to login server",
 		"server_address", sess.serverConn.RemoteAddr().String(),
 		"packet", pkt,
 	)

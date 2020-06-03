@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sync"
 	"syscall"
 
@@ -54,7 +55,7 @@ func run() (exitCode int) {
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
-		logger.Debugw("received signal",
+		logger.Infow("received signal",
 			"signal", sig.String(),
 		)
 		signal.Stop(sigs)
@@ -102,7 +103,15 @@ func loadLogger() error {
 		}
 		logger = tmp.Sugar()
 	} else {
-		tmp, err := zap.NewProduction()
+		cfg := zap.NewProductionConfig()
+
+		os.Mkdir("logs", 0775)
+		cfg.OutputPaths = append(
+			cfg.OutputPaths,
+			filepath.Join("logs", "serve.log"),
+		)
+
+		tmp, err := cfg.Build()
 		if err != nil {
 			return err
 		}
