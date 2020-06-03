@@ -267,8 +267,8 @@ func sendMsgToGameServer(sess *session, msg d1proto.MsgCli) error {
 }
 
 func sendPktToGameClient(sess *session, pkt string) {
-	id, _ := d1proto.MsgCliIdByPkt(pkt)
-	name, _ := d1proto.MsgCliNameByID(id)
+	id, _ := d1proto.MsgSvrIdByPkt(pkt)
+	name, _ := d1proto.MsgSvrNameByID(id)
 	logger.Debugw("sent packet to game client",
 		"client_address", sess.clientConn.RemoteAddr().String(),
 		"message_name", name,
@@ -278,8 +278,8 @@ func sendPktToGameClient(sess *session, pkt string) {
 }
 
 func sendPktToGameServer(sess *session, pkt string) {
-	id, _ := d1proto.MsgSvrIdByPkt(pkt)
-	name, _ := d1proto.MsgSvrNameByID(id)
+	id, _ := d1proto.MsgCliIdByPkt(pkt)
+	name, _ := d1proto.MsgCliNameByID(id)
 	logger.Infow("sent packet to game server",
 		"server_address", sess.serverConn.RemoteAddr().String(),
 		"message_name", name,

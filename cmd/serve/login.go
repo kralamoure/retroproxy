@@ -206,8 +206,8 @@ func sendMsgToLoginClient(sess *session, msg d1proto.MsgSvr) error {
 }
 
 func sendPktToLoginClient(sess *session, pkt string) {
-	id, _ := d1proto.MsgCliIdByPkt(pkt)
-	name, _ := d1proto.MsgCliNameByID(id)
+	id, _ := d1proto.MsgSvrIdByPkt(pkt)
+	name, _ := d1proto.MsgSvrNameByID(id)
 	logger.Debugw("sent packet to login client",
 		"client_address", sess.clientConn.RemoteAddr().String(),
 		"message_name", name,
@@ -217,8 +217,8 @@ func sendPktToLoginClient(sess *session, pkt string) {
 }
 
 func sendPktToLoginServer(sess *session, pkt string) {
-	id, _ := d1proto.MsgSvrIdByPkt(pkt)
-	name, _ := d1proto.MsgSvrNameByID(id)
+	id, _ := d1proto.MsgCliIdByPkt(pkt)
+	name, _ := d1proto.MsgCliNameByID(id)
 	logger.Infow("sent packet to login server",
 		"server_address", sess.serverConn.RemoteAddr().String(),
 		"message_name", name,
