@@ -100,6 +100,9 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 				return
 			}
 			pkt = strings.TrimSuffix(pkt, "\x00")
+			if pkt == "" {
+				continue
+			}
 			serverPktCh <- pkt
 		}
 	}()
@@ -114,6 +117,9 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 				return
 			}
 			pkt = strings.TrimSuffix(pkt, "\n\x00")
+			if pkt == "" {
+				continue
+			}
 			clientPktCh <- pkt
 		}
 	}()

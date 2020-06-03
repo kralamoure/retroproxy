@@ -94,6 +94,9 @@ func handleGameConn(ctx context.Context, conn net.Conn) error {
 				return
 			}
 			pkt = strings.TrimSuffix(pkt, "\n\x00")
+			if pkt == "" {
+				continue
+			}
 			clientPktCh <- pkt
 		}
 	}()
@@ -163,6 +166,9 @@ func connectToGameServer(ctx context.Context, sess *session, address string) err
 				return
 			}
 			pkt = strings.TrimSuffix(pkt, "\x00")
+			if pkt == "" {
+				continue
+			}
 			sess.gameServerPktCh <- pkt
 		}
 	}()
