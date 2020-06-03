@@ -37,6 +37,8 @@ type session struct {
 	gameServerCh         chan msgsvr.AccountSelectServerSuccess
 	gameServerPktCh      chan string
 	gameServerTicket     string
+
+	mu sync.Mutex
 }
 
 func run() (exitCode int) {

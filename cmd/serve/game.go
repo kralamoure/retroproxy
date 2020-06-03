@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"gitlab.com/dofuspro/d1proto"
+	"gitlab.com/dofuspro/d1proto/enum"
 	"gitlab.com/dofuspro/d1proto/msgcli"
 	"gitlab.com/dofuspro/d1proto/msgsvr"
 )
@@ -175,12 +176,13 @@ func connectToGameServer(ctx context.Context, sess *session, address string) err
 }
 
 func handlePktFromGameClient(sess *session, pkt string) error {
+	id, ok := d1proto.MsgCliIdByPkt(pkt)
+	name, _ := d1proto.MsgCliNameByID(id)
 	logger.Debugw("received packet from game client",
 		"client_address", sess.clientConn.RemoteAddr().String(),
+		"message_name", name,
 		"packet", pkt,
 	)
-
-	id, ok := d1proto.MsgCliIdByPkt(pkt)
 	if ok {
 		extra := strings.TrimPrefix(pkt, string(id))
 		switch id {
@@ -216,14 +218,16 @@ func handlePktFromGameClient(sess *session, pkt string) error {
 }
 
 func handlePktFromGameServer(sess *session, pkt string) error {
+	id, ok := d1proto.MsgSvrIdByPkt(pkt)
+	name, _ := d1proto.MsgSvrNameByID(id)
 	logger.Infow("received packet from game server",
 		"server_address", sess.serverConn.RemoteAddr().String(),
 		"client_address", sess.clientConn.RemoteAddr().String(),
+		"message_name", name,
 		"packet", pkt,
 	)
-
-	id, ok := d1proto.MsgSvrIdByPkt(pkt)
 	if ok {
+		extra := strings.TrimPrefix(pkt, string(id))
 		switch id {
 		case d1proto.AksHelloGame:
 			err := sendMsgToGameServer(sess, &msgcli.AccountSendTicket{Id: sess.gameServerTicket})
@@ -231,6 +235,21 @@ func handlePktFromGameServer(sess *session, pkt string) error {
 				return err
 			}
 			return nil
+		case d1proto.GameMovement:
+			msg := &msgsvr.GameMovement{}
+			err := msg.Deserialize(extra)
+			if err != nil {
+				return err
+			}
+			for _, sprite := range msg.Sprites {
+				if sprite.Type != enum.GameMovementSpriteType.NPC || sprite.Transition {
+					continue
+				}
+				logger.Infow("detected npc sprite",
+					"sprite_id", sprite.Id)
+
+				// msgOut := &msgcli.DialogCreate{}
+			}
 		}
 	}
 
@@ -248,16 +267,22 @@ func sendMsgToGameServer(sess *session, msg d1proto.MsgCli) error {
 }
 
 func sendPktToGameClient(sess *session, pkt string) {
+	id, _ := d1proto.MsgCliIdByPkt(pkt)
+	name, _ := d1proto.MsgCliNameByID(id)
 	logger.Debugw("sent packet to game client",
 		"client_address", sess.clientConn.RemoteAddr().String(),
+		"message_name", name,
 		"packet", pkt,
 	)
 	fmt.Fprint(sess.clientConn, pkt+"\x00")
 }
 
 func sendPktToGameServer(sess *session, pkt string) {
+	id, _ := d1proto.MsgSvrIdByPkt(pkt)
+	name, _ := d1proto.MsgSvrNameByID(id)
 	logger.Infow("sent packet to game server",
 		"server_address", sess.serverConn.RemoteAddr().String(),
+		"message_name", name,
 		"packet", pkt,
 	)
 	fmt.Fprint(sess.serverConn, pkt+"\n\x00")

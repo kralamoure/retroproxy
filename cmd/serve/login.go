@@ -139,12 +139,13 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 }
 
 func handlePktFromLoginClient(sess *session, pkt string) error {
+	id, ok := d1proto.MsgCliIdByPkt(pkt)
+	name, _ := d1proto.MsgCliNameByID(id)
 	logger.Debugw("received packet from login client",
 		"client_address", sess.clientConn.RemoteAddr().String(),
+		"message_name", name,
 		"packet", pkt,
 	)
-
-	id, ok := d1proto.MsgCliIdByPkt(pkt)
 	if ok {
 		extra := strings.TrimPrefix(pkt, string(id))
 		switch id {
@@ -163,13 +164,14 @@ func handlePktFromLoginClient(sess *session, pkt string) error {
 }
 
 func handlePktFromLoginServer(sess *session, pkt string) error {
+	id, ok := d1proto.MsgSvrIdByPkt(pkt)
+	name, _ := d1proto.MsgSvrNameByID(id)
 	logger.Infow("received packet from login server",
 		"server_address", sess.serverConn.RemoteAddr().String(),
 		"client_address", sess.clientConn.RemoteAddr().String(),
+		"message_name", name,
 		"packet", pkt,
 	)
-
-	id, ok := d1proto.MsgSvrIdByPkt(pkt)
 	if ok {
 		extra := strings.TrimPrefix(pkt, string(id))
 		switch id {
@@ -180,12 +182,12 @@ func handlePktFromLoginServer(sess *session, pkt string) error {
 				return err
 			}
 
-			msg2 := &msgsvr.AccountSelectServerPlainSuccess{
+			msgOut := &msgsvr.AccountSelectServerPlainSuccess{
 				Host:   "localhost",
 				Port:   gameProxyPort,
 				Ticket: fmt.Sprintf("%d|%s|%s|%s", sess.serverId, msg.Host, msg.Port, msg.Ticket),
 			}
-			sendMsgToLoginClient(sess, msg2)
+			sendMsgToLoginClient(sess, msgOut)
 			return nil
 		}
 	}
@@ -204,16 +206,22 @@ func sendMsgToLoginClient(sess *session, msg d1proto.MsgSvr) error {
 }
 
 func sendPktToLoginClient(sess *session, pkt string) {
+	id, _ := d1proto.MsgCliIdByPkt(pkt)
+	name, _ := d1proto.MsgCliNameByID(id)
 	logger.Debugw("sent packet to login client",
 		"client_address", sess.clientConn.RemoteAddr().String(),
+		"message_name", name,
 		"packet", pkt,
 	)
 	fmt.Fprint(sess.clientConn, pkt+"\x00")
 }
 
 func sendPktToLoginServer(sess *session, pkt string) {
+	id, _ := d1proto.MsgSvrIdByPkt(pkt)
+	name, _ := d1proto.MsgSvrNameByID(id)
 	logger.Infow("sent packet to login server",
 		"server_address", sess.serverConn.RemoteAddr().String(),
+		"message_name", name,
 		"packet", pkt,
 	)
 	fmt.Fprint(sess.serverConn, pkt+"\n\x00")
