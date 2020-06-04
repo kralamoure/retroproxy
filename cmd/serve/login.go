@@ -90,7 +90,7 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 
 	errCh := make(chan error, 1)
 
-	serverPktCh := make(chan string)
+	serverPktCh := make(chan string, 64)
 	go func() {
 		rd := bufio.NewReader(serverConn)
 		for {
@@ -107,7 +107,7 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 		}
 	}()
 
-	clientPktCh := make(chan string)
+	clientPktCh := make(chan string, 64)
 	go func() {
 		rd := bufio.NewReader(sess.clientConn)
 		for {

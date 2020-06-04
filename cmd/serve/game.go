@@ -20,6 +20,15 @@ import (
 
 var errMalformedPacket = errors.New("malformed packet")
 
+type gameStatus int
+
+const (
+	gameStatusIdle gameStatus = iota
+	gameStatusWaitingForDialogCreateResponse
+	gameStatusWaitingForDialogQuestion
+	gameStatusWaitingForDialogLeave
+)
+
 func proxyGame(ctx context.Context) error {
 	ln, err := net.Listen("tcp4", net.JoinHostPort("localhost", gameProxyPort))
 	if err != nil {
@@ -77,14 +86,15 @@ func handleGameConn(ctx context.Context, conn net.Conn) error {
 	)
 
 	sess := &session{
-		clientConn:      conn,
-		gameServerCh:    make(chan msgsvr.AccountSelectServerSuccess, 1),
-		gameServerPktCh: make(chan string),
+		clientConn:         conn,
+		gameServerCh:       make(chan msgsvr.AccountSelectServerSuccess, 1),
+		gameServerPktCh:    make(chan string, 64),
+		gameServerMsgOutCh: make(chan d1proto.MsgCli, 64),
 	}
 
 	errCh := make(chan error, 1)
 
-	clientPktCh := make(chan string)
+	clientPktCh := make(chan string, 64)
 	go func() {
 		rd := bufio.NewReader(conn)
 		for {
@@ -109,6 +119,10 @@ LOOP:
 	for {
 		select {
 		case pkt := <-clientPktCh:
+			if sess.gameStatus != gameStatusIdle || sess.dialogsLeft != 0 {
+				clientPktCh <- pkt
+				continue
+			}
 			err := handlePktFromGameClient(sess, pkt)
 			if err != nil {
 				loopErr = err
@@ -116,6 +130,21 @@ LOOP:
 			}
 		case pkt := <-sess.gameServerPktCh:
 			err := handlePktFromGameServer(sess, pkt)
+			if err != nil {
+				loopErr = err
+				break LOOP
+			}
+		case msg := <-sess.gameServerMsgOutCh:
+			id := msg.ProtocolId()
+			switch id {
+			case d1proto.DialogCreate:
+				if sess.gameStatus != gameStatusIdle {
+					sess.gameServerMsgOutCh <- msg
+					continue
+				}
+				sess.gameStatus = gameStatusWaitingForDialogCreateResponse
+			}
+			err := sendMsgToGameServer(sess, msg)
 			if err != nil {
 				loopErr = err
 				break LOOP
@@ -251,20 +280,37 @@ func handlePktFromGameServer(sess *session, pkt string) error {
 				if sprite.Type != enum.GameMovementSpriteType.NPC {
 					continue
 				}
-				// TODO
-				logger.Infow("detected npc sprite",
-					"sprite_id", sprite.Id,
-				)
-				/*err := sendMsgToGameServer(sess, &msgcli.DialogCreate{NPCId: sprite.Id})
-				if err != nil {
-					return err
-				}*/
+				sess.dialogsLeft++
+				sess.gameServerMsgOutCh <- &msgcli.DialogCreate{NPCId: sprite.Id}
 			}
 			err = sendMsgToGameClient(sess, msg)
 			if err != nil {
 				return err
 			}
 			return nil
+		case d1proto.DialogCreateError:
+			if sess.gameStatus == gameStatusWaitingForDialogCreateResponse {
+				sess.gameStatus = gameStatusIdle
+				sess.dialogsLeft--
+				return nil
+			}
+		case d1proto.DialogCreateSuccess:
+			if sess.gameStatus == gameStatusWaitingForDialogCreateResponse {
+				sess.gameStatus = gameStatusWaitingForDialogQuestion
+				return nil
+			}
+		case d1proto.DialogQuestion:
+			if sess.gameStatus == gameStatusWaitingForDialogQuestion {
+				sess.gameServerMsgOutCh <- &msgcli.DialogRequestLeave{}
+				sess.gameStatus = gameStatusWaitingForDialogLeave
+				return nil
+			}
+		case d1proto.DialogLeave:
+			if sess.gameStatus == gameStatusWaitingForDialogLeave {
+				sess.gameStatus = gameStatusIdle
+				sess.dialogsLeft--
+				return nil
+			}
 		}
 	}
 

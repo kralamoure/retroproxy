@@ -5,14 +5,12 @@ import (
 	"errors"
 	"flag"
 	"log"
-	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"sync"
 	"syscall"
 
-	"gitlab.com/dofuspro/d1proto/msgsvr"
 	"go.uber.org/zap"
 )
 
@@ -27,19 +25,6 @@ var (
 	gameProxyPort  string
 	address        string
 )
-
-type session struct {
-	clientConn net.Conn
-	serverConn net.Conn
-	serverId   int
-
-	receivedFirstGamePkt bool
-	gameServerCh         chan msgsvr.AccountSelectServerSuccess
-	gameServerPktCh      chan string
-	gameServerTicket     string
-
-	mu sync.Mutex
-}
 
 func run() (exitCode int) {
 	loadVars()
