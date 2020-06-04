@@ -247,22 +247,19 @@ func handlePktFromGameServer(sess *session, pkt string) error {
 			if err != nil {
 				return err
 			}
-			for i, sprite := range msg.Sprites {
-				if sprite.Type > 0 {
-					msg.Sprites[i].Character.Name = fmt.Sprintf("%s (%d)", sprite.Character.Name, sprite.Character.Level)
-				}
-
-				if sprite.Type != enum.GameMovementSpriteType.NPC || sprite.Transition {
+			for _, sprite := range msg.Sprites {
+				if sprite.Type != enum.GameMovementSpriteType.NPC {
 					continue
 				}
 				// TODO
 				logger.Infow("detected npc sprite",
 					"sprite_id", sprite.Id,
 				)
-				// err := sendMsgToGameServer(sess, &msgcli.DialogCreate{})
+				err := sendMsgToGameServer(sess, &msgcli.DialogCreate{NPCId: sprite.Id})
 				if err != nil {
 					return err
 				}
+				break
 			}
 			err = sendMsgToGameClient(sess, msg)
 			if err != nil {
