@@ -247,7 +247,11 @@ func handlePktFromGameServer(sess *session, pkt string) error {
 			if err != nil {
 				return err
 			}
-			for _, sprite := range msg.Sprites {
+			for i, sprite := range msg.Sprites {
+				if sprite.Type > 0 {
+					msg.Sprites[i].Character.Name = fmt.Sprintf("%s (%d)", sprite.Character.Name, sprite.Character.Level)
+				}
+
 				if sprite.Type != enum.GameMovementSpriteType.NPC || sprite.Transition {
 					continue
 				}
@@ -256,10 +260,24 @@ func handlePktFromGameServer(sess *session, pkt string) error {
 
 				// msgOut := &msgcli.DialogCreate{}
 			}
+			err = sendMsgToGameClient(sess, msg)
+			if err != nil {
+				return err
+			}
+			return nil
 		}
 	}
 
 	sendPktToGameClient(sess, pkt)
+	return nil
+}
+
+func sendMsgToGameClient(sess *session, msg d1proto.MsgSvr) error {
+	pkt, err := msg.Serialized()
+	if err != nil {
+		return err
+	}
+	sendPktToGameClient(sess, fmt.Sprint(msg.ProtocolId(), pkt))
 	return nil
 }
 
@@ -275,7 +293,7 @@ func sendMsgToGameServer(sess *session, msg d1proto.MsgCli) error {
 func sendPktToGameClient(sess *session, pkt string) {
 	id, _ := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
-	logger.Debugw("sent packet to game client",
+	logger.Infow("sent packet to game client",
 		"client_address", sess.clientConn.RemoteAddr().String(),
 		"message_name", name,
 		"packet", pkt,
