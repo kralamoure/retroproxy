@@ -12,7 +12,8 @@ Some examples of what you can do with this tool:
 - Get map encryption keys
 - Get map fight positions
 - Get map trigger cells
-- Get dialogs from NPCs
+- Get monster groups locations
+- Get dialogs (questions and answers) from NPCs
 
 
 ## Usage
