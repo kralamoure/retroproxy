@@ -271,6 +271,9 @@ func handlePktFromGameServer(sess *session, pkt string) error {
 			}
 			return nil
 		case d1proto.GameMovement:
+			if !talkToEveryNPC {
+				break
+			}
 			msg := &msgsvr.GameMovement{}
 			err := msg.Deserialize(extra)
 			if err != nil {
