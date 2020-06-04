@@ -95,7 +95,7 @@ func loadLogger() error {
 		os.Mkdir("logs", 0775)
 		cfg.OutputPaths = append(
 			cfg.OutputPaths,
-			filepath.Join("logs", "serve.log"),
+			filepath.Join("logs", "proxy.log"),
 		)
 
 		tmp, err := cfg.Build()
