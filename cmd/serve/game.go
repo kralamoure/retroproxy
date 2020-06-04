@@ -255,11 +255,10 @@ func handlePktFromGameServer(sess *session, pkt string) error {
 				logger.Infow("detected npc sprite",
 					"sprite_id", sprite.Id,
 				)
-				err := sendMsgToGameServer(sess, &msgcli.DialogCreate{NPCId: sprite.Id})
+				/*err := sendMsgToGameServer(sess, &msgcli.DialogCreate{NPCId: sprite.Id})
 				if err != nil {
 					return err
-				}
-				break
+				}*/
 			}
 			err = sendMsgToGameClient(sess, msg)
 			if err != nil {
