@@ -4,7 +4,7 @@
 server for logging every packet between them, so you can analyze them later.
 
 If you start the proxy in production mode, it saves the logs in `proxy.log`. Also, it can automatically talk to every
-NPC, while hiding from the client the dialogs caused by this.
+NPC — while hiding from the client the dialogs caused by this behavior.
 
 ## Usage
 
