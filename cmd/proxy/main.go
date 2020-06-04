@@ -23,6 +23,7 @@ var (
 	loginProxyPort string
 	gameProxyPort  string
 	address        string
+	talkToEveryNPC bool
 )
 
 func run() (exitCode int) {
@@ -78,6 +79,7 @@ func loadVars() {
 	flag.StringVar(&loginProxyPort, "lp", "5555", "Dofus login proxy port")
 	flag.StringVar(&gameProxyPort, "gp", "5556", "Dofus game proxy port")
 	flag.StringVar(&address, "a", "34.251.172.139:443", "Dofus login server address")
+	flag.BoolVar(&talkToEveryNPC, "npc", true, "Automatically talk to every NPC")
 	flag.Parse()
 }
 
