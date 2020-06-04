@@ -36,6 +36,8 @@ gitlab.com/dofuspro/d1proto v0.0.0-20200604072752-ea0ae51c725d h1:gIj4A5FZheRKbx
 gitlab.com/dofuspro/d1proto v0.0.0-20200604072752-ea0ae51c725d/go.mod h1:Z2pZCUZB/hH82ZDqr5K5n1YWU7qki6SKH6339l7mJ4c=
 gitlab.com/dofuspro/d1proto v0.0.0-20200604073032-4541e583f1a4 h1:INpxf2BzGVCry9Xc2zcWbdvUAK7HfenrvtvkEgux0Zg=
 gitlab.com/dofuspro/d1proto v0.0.0-20200604073032-4541e583f1a4/go.mod h1:Z2pZCUZB/hH82ZDqr5K5n1YWU7qki6SKH6339l7mJ4c=
+gitlab.com/dofuspro/d1proto v0.0.0-20200604075753-225507dab4fb h1:NDqvBgCP+6GaMkGuxCXvkWCjgWLgpMeBD1SJJxyABi4=
+gitlab.com/dofuspro/d1proto v0.0.0-20200604075753-225507dab4fb/go.mod h1:Z2pZCUZB/hH82ZDqr5K5n1YWU7qki6SKH6339l7mJ4c=
 go.uber.org/atomic v1.6.0 h1:Ezj3JGmsOnG1MoRWQkPBsKLe9DwWD9QeXzTRzzldNVk=
 go.uber.org/atomic v1.6.0/go.mod h1:sABNBOSYdrvTF6hTgEIbc7YasKWGhgEQZyfxyTvoXHQ=
 go.uber.org/multierr v1.5.0 h1:KCa4XfM8CWFCpxXRGok+Q0SS/0XBhMDbHHGABQLvD2A=
