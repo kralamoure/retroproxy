@@ -255,10 +255,10 @@ func handlePktFromGameServer(sess *session, pkt string) error {
 				if sprite.Type != enum.GameMovementSpriteType.NPC || sprite.Transition {
 					continue
 				}
+				// TODO
 				logger.Infow("detected npc sprite",
-					"sprite_id", sprite.Id)
-
-				// msgOut := &msgcli.DialogCreate{}
+					"sprite_id", sprite.Id,
+				)
 			}
 			err = sendMsgToGameClient(sess, msg)
 			if err != nil {
