@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"sync"
 	"syscall"
 
@@ -92,10 +91,9 @@ func loadLogger() error {
 	} else {
 		cfg := zap.NewProductionConfig()
 
-		os.Mkdir("logs", 0775)
 		cfg.OutputPaths = append(
 			cfg.OutputPaths,
-			filepath.Join("logs", "proxy.log"),
+			"proxy.log",
 		)
 
 		tmp, err := cfg.Build()
