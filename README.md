@@ -13,8 +13,7 @@ Some examples of what you can do with this tool:
 - Get map fight positions
 - Get map trigger cells
 - Get monster groups locations
-- Get dialogs (questions and answers) from NPCs
-
+- Get dialogs (questions and answers) from NPCs 
 
 ## Usage
 
