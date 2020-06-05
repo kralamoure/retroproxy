@@ -17,7 +17,7 @@ Some examples of what you can do with this tool:
 
 ## Building
 
-```console
+```sh
 git clone https://github.com/kralamoure/d1scraper
 cd d1scraper
 go build ./cmd/...
