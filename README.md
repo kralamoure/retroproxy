@@ -19,8 +19,8 @@ Some examples of what you can do with this tool:
 
 Requirements:
 
-- [Git](https://git-scm.com/)
-- [Go](https://golang.org/)
+- Git (https://git-scm.com/)
+- Go (https://golang.org/)
 
 ```sh
 git clone https://github.com/kralamoure/d1scraper
