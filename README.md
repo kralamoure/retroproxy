@@ -17,16 +17,16 @@ Some examples of what you can do with this tool:
 
 ## Build
 
-Requirements:
-
-- [Git](https://git-scm.com/)
-- [Go](https://golang.org/)
-
 ```sh
 git clone https://github.com/kralamoure/d1scraper
 cd d1scraper
 go build ./cmd/...
 ```
+
+### Requirements:
+
+- [Git](https://git-scm.com/)
+- [Go](https://golang.org/)
 
 ## Usage
 
