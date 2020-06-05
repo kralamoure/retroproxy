@@ -15,10 +15,20 @@ Some examples of what you can do with this tool:
 - Get monster groups locations
 - Get dialogs (questions and answers) from NPCs
 
-## Build
+## Building
 
 ```console
+git clone https://github.com/kralamoure/d1scraper
+cd d1scraper
 go build ./cmd/...
+```
+
+## Installing
+
+```console
+git clone https://github.com/kralamoure/d1scraper
+cd d1scraper
+go install ./cmd/...
 ```
 
 ## Usage
