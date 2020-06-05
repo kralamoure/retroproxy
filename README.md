@@ -23,14 +23,6 @@ cd d1scraper
 go build ./cmd/...
 ```
 
-## Installment
-
-```sh
-git clone https://github.com/kralamoure/d1scraper
-cd d1scraper
-go install ./cmd/...
-```
-
 ## Usage
 
 ```sh
