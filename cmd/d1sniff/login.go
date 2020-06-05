@@ -10,7 +10,9 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/gofrs/uuid"
 	"gitlab.com/dofuspro/d1proto"
 	"gitlab.com/dofuspro/d1proto/msgcli"
 	"gitlab.com/dofuspro/d1proto/msgsvr"
@@ -188,12 +190,28 @@ func handlePktFromLoginServer(sess *session, pkt string) error {
 				return err
 			}
 
+			id, err := uuid.NewV4()
+			if err != nil {
+				return err
+			}
+
+			setTicket(id.String(), ticket{
+				host:             msg.Host,
+				port:             msg.Port,
+				originalTicketId: msg.Ticket,
+				serverId:         sess.serverId,
+				issuedAt:         time.Now(),
+			})
+
 			msgOut := &msgsvr.AccountSelectServerPlainSuccess{
 				Host:   "localhost",
 				Port:   gameProxyPort,
-				Ticket: fmt.Sprintf("%d|%s|%s|%s", sess.serverId, msg.Host, msg.Port, msg.Ticket),
+				Ticket: id.String(),
 			}
-			sendMsgToLoginClient(sess, msgOut)
+			err = sendMsgToLoginClient(sess, msgOut)
+			if err != nil {
+				return err
+			}
 			return nil
 		}
 	}
@@ -214,7 +232,7 @@ func sendMsgToLoginClient(sess *session, msg d1proto.MsgSvr) error {
 func sendPktToLoginClient(sess *session, pkt string) {
 	id, _ := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
-	logger.Debugw("sent packet to login client",
+	logger.Infow("sent packet to login client",
 		"client_address", sess.clientConn.RemoteAddr().String(),
 		"message_name", name,
 		"packet", pkt,

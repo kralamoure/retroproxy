@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -17,8 +16,6 @@ import (
 	"gitlab.com/dofuspro/d1proto/msgcli"
 	"gitlab.com/dofuspro/d1proto/msgsvr"
 )
-
-var errMalformedPacket = errors.New("malformed packet")
 
 type gameStatus int
 
@@ -227,21 +224,17 @@ func handlePktFromGameClient(sess *session, pkt string) error {
 			}
 			sess.receivedFirstGamePkt = true
 
-			sli := strings.SplitN(extra, "|", 4)
-			if len(sli) < 4 {
-				return errMalformedPacket
+			t, ok := useTicket(extra)
+			if !ok {
+				return errors.New("ticket not found")
 			}
 
-			serverId, err := strconv.Atoi(sli[0])
-			if err != nil {
-				return err
-			}
-			sess.serverId = serverId
+			sess.serverId = t.serverId
 
 			msg := &msgsvr.AccountSelectServerSuccess{
-				Host:   sli[1],
-				Port:   sli[2],
-				Ticket: sli[3],
+				Host:   t.host,
+				Port:   t.port,
+				Ticket: t.originalTicketId,
 			}
 			sess.gameServerCh <- *msg
 			return nil
@@ -342,7 +335,7 @@ func sendMsgToGameServer(sess *session, msg d1proto.MsgCli) error {
 func sendPktToGameClient(sess *session, pkt string) {
 	id, _ := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
-	logger.Debugw("sent packet to game client",
+	logger.Infow("sent packet to game client",
 		"client_address", sess.clientConn.RemoteAddr().String(),
 		"message_name", name,
 		"packet", pkt,

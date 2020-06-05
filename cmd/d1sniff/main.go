@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -49,7 +50,7 @@ func run() (exitCode int) {
 		cancel()
 	}()
 
-	wg := sync.WaitGroup{}
+	wg := &sync.WaitGroup{}
 
 	wg.Add(1)
 	go func() {
@@ -67,6 +68,13 @@ func run() (exitCode int) {
 			log.Printf("error while proxying game server: %s", err)
 		}
 		cancel()
+	}()
+
+	go func() {
+		for {
+			deleteOldTickets(15 * time.Second)
+			time.Sleep(1 * time.Second)
+		}
 	}()
 
 	<-ctx.Done()
