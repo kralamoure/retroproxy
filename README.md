@@ -19,8 +19,8 @@ Some examples of what you can do with this tool:
 ## Build
 
 ```sh
-git clone https://github.com/kralamoure/d1sniffer
-cd d1sniffer
+git clone https://github.com/kralamoure/d1sniff
+cd d1sniff
 go build ./cmd/...
 ```
 
