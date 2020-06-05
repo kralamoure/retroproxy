@@ -15,7 +15,7 @@ Some examples of what you can do with this tool:
 - Get monster groups locations
 - Get dialogs (questions and answers) from NPCs
 
-## Building
+## Build
 
 ```console
 go build ./cmd/... 
