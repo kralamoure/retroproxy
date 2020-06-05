@@ -72,7 +72,7 @@ func run() (exitCode int) {
 
 	go func() {
 		for {
-			deleteOldTickets(15 * time.Second)
+			deleteOldTickets(60 * time.Second)
 			time.Sleep(1 * time.Second)
 		}
 	}()
