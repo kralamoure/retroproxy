@@ -25,7 +25,7 @@ go build ./cmd/...
 
 ## Installing
 
-```console
+```sh
 git clone https://github.com/kralamoure/d1scraper
 cd d1scraper
 go install ./cmd/...
@@ -33,6 +33,6 @@ go install ./cmd/...
 
 ## Usage
 
-```console
+```sh
 proxy -help
 ```
