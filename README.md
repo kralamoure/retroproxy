@@ -20,5 +20,5 @@ Some examples of what you can do with this tool:
 ### Starting the proxy
 
 ```console
-proxy -help 
+$ proxy -help 
 ```
