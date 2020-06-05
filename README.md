@@ -10,7 +10,7 @@ NPC — while hiding from the client the dialogs caused by this behavior.
 Some examples of what you can do with this tool:
 
 - Reverse engineer a server
-- Get map encryption keysW
+- Get map encryption keys
 - Get map fight positions
 - Get map trigger cells
 - Get monster groups locations
