@@ -18,13 +18,11 @@ Some examples of what you can do with this tool:
 ## Build
 
 ```console
-go build ./cmd/... 
+go build ./cmd/...
 ```
 
 ## Usage
 
-Start the proxy.
-
 ```console
-proxy -help 
+proxy -help
 ```
