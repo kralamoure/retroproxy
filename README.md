@@ -34,5 +34,5 @@ go install ./cmd/...
 ## Usage
 
 ```sh
-proxy -help
+proxy -h
 ```
