@@ -18,7 +18,7 @@ Some examples of what you can do with this tool:
 ## Building
 
 ```sh
-git clone https://github.com/kralamoure/d1scraper // clone the repository
+git clone https://github.com/kralamoure/d1scraper # Clone the repository
 cd d1scraper
 go build ./cmd/...
 ```
