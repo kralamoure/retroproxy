@@ -1,10 +1,10 @@
-# d1sniffer
+# d1sniff
 
-`d1sniffer` is a tool for sniffing packets from a live Dofus 1 server. It works by creating a proxy to a login
+`d1sniff` is a tool for sniffing packets from a Dofus 1 server. It works by starting a proxy to a login
 server, and eventually one to a game server, while logging every packet between the proxies and the servers, so you can
 analyze the packets later.
 
-If you start the proxy in production mode, it saves the logs in `proxy.log`. Also, it can automatically talk to every
+If you start it in production mode, it appends the logs to `d1sniff.log`. Also, it can automatically talk to every
 NPC — while hiding from the client the dialogs caused by this behavior.
 
 Some examples of what you can do with this tool:
@@ -32,5 +32,5 @@ go build ./cmd/...
 ## Usage
 
 ```sh
-proxy -help
+d1sniff -help
 ```

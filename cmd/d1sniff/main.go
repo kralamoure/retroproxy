@@ -95,7 +95,7 @@ func loadLogger() error {
 
 		cfg.OutputPaths = append(
 			cfg.OutputPaths,
-			"proxy.log",
+			"d1sniff.log",
 		)
 
 		tmp, err := cfg.Build()
