@@ -13,11 +13,18 @@ Some examples of what you can do with this tool:
 - Get map fight positions
 - Get map trigger cells
 - Get monster groups locations
-- Get dialogs (questions and answers) from NPCs 
+- Get dialogs (questions and answers) from NPCs
+
+## Building
+
+```console
+go build ./cmd/... 
+```
+ 
 
 ## Usage
 
-### Starting the proxy
+Start the proxy.
 
 ```console
 proxy -help 
