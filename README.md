@@ -17,7 +17,7 @@ Some examples of what you can do with this tool:
 
 ## Building
 
-```sh
+```console
 go build ./cmd/... 
 ```
 
