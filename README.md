@@ -1,7 +1,7 @@
 # d1sniffer
 
 `d1sniffer` is a tool for sniffing packets from a live Dofus 1 server. It works by creating a proxy to a login
-server, and eventually to a game server, while logging every packet between the proxy and the servers, so you can
+server, and eventually one to a game server, while logging every packet between the proxies and the servers, so you can
 analyze the packets later.
 
 If you start the proxy in production mode, it saves the logs in `proxy.log`. Also, it can automatically talk to every
