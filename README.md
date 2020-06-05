@@ -15,7 +15,7 @@ Some examples of what you can do with this tool:
 - Get monster groups locations
 - Get dialogs (questions and answers) from NPCs
 
-## Building
+## Build
 
 ```sh
 git clone https://github.com/kralamoure/d1scraper
@@ -23,7 +23,7 @@ cd d1scraper
 go build ./cmd/...
 ```
 
-## Installing
+## Installment
 
 ```sh
 git clone https://github.com/kralamoure/d1scraper
