@@ -17,10 +17,10 @@ Some examples of what you can do with this tool:
 
 ## Building
 
-```sh
-git clone https://github.com/kralamoure/d1scraper
-cd d1scraper
-go build ./cmd/...
+```console
+$ git clone https://github.com/kralamoure/d1scraper
+$ cd d1scraper
+$ go build ./cmd/...
 ```
 
 ## Installing
