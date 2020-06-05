@@ -1,4 +1,4 @@
-module github.com/kralamoure/d1scraper
+module github.com/kralamoure/d1sniffer
 
 go 1.14
 
