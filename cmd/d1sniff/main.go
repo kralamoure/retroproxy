@@ -73,7 +73,7 @@ func run() (exitCode int) {
 	go func() {
 		for {
 			wg.Add(1)
-			deleteOldTickets(60 * time.Second)
+			deleteOldTickets(15 * time.Second)
 			wg.Done()
 			time.Sleep(1 * time.Second)
 		}
