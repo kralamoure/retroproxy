@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -52,22 +53,22 @@ func run() (exitCode int) {
 
 	wg := sync.WaitGroup{}
 
+	errCh := make(chan error, 1)
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		if err := proxyLogin(ctx); err != nil && !errors.Is(err, context.Canceled) {
-			log.Printf("error while proxying login server: %s", err)
+			errCh <- fmt.Errorf("error while proxying login server: %w", err)
 		}
-		cancel()
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		if err := proxyGame(ctx); err != nil && !errors.Is(err, context.Canceled) {
-			log.Printf("error while proxying game server: %s", err)
+			errCh <- fmt.Errorf("error while proxying game server: %w", err)
 		}
-		cancel()
 	}()
 
 	go func() {
@@ -79,9 +80,15 @@ func run() (exitCode int) {
 		}
 	}()
 
-	<-ctx.Done()
+	select {
+	case <-ctx.Done():
+	case err := <-errCh:
+		logger.Error(err)
+		exitCode = 1
+		cancel()
+	}
 	wg.Wait()
-	return 0
+	return exitCode
 }
 
 func loadVars() {
