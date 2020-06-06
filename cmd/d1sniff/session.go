@@ -3,8 +3,8 @@ package main
 import (
 	"net"
 
-	"gitlab.com/dofuspro/d1proto"
-	"gitlab.com/dofuspro/d1proto/msgsvr"
+	"github.com/kralamoure/d1proto"
+	"github.com/kralamoure/d1proto/msgsvr"
 )
 
 type session struct {

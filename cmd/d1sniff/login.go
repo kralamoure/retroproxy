@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"gitlab.com/dofuspro/d1proto"
-	"gitlab.com/dofuspro/d1proto/msgcli"
-	"gitlab.com/dofuspro/d1proto/msgsvr"
+	"github.com/kralamoure/d1proto"
+	"github.com/kralamoure/d1proto/msgcli"
+	"github.com/kralamoure/d1proto/msgsvr"
 )
 
 func proxyLogin(ctx context.Context) error {
