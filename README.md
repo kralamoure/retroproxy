@@ -16,6 +16,11 @@ Some examples of what you can do with this tool:
 - Get monster groups locations
 - Get dialogs (questions and answers) from NPCs
 
+## Requirements:
+
+- [Git](https://git-scm.com/)
+- [Go](https://golang.org/)
+
 ## Build
 
 ```sh
@@ -24,10 +29,11 @@ cd d1sniff
 go build ./cmd/...
 ```
 
-### Requirements:
+## Installation
 
-- [Git](https://git-scm.com/)
-- [Go](https://golang.org/)
+```sh
+go get https://github.com/kralamoure/d1sniff/cmd/d1sniff
+```
 
 ## Usage
 
