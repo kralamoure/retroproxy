@@ -108,14 +108,7 @@ func loadLogger() error {
 		}
 		logger = tmp.Sugar()
 	} else {
-		cfg := zap.NewProductionConfig()
-
-		cfg.OutputPaths = append(
-			cfg.OutputPaths,
-			"d1sniff.log",
-		)
-
-		tmp, err := cfg.Build()
+		tmp, err := zap.NewProduction()
 		if err != nil {
 			return err
 		}
