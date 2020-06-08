@@ -28,7 +28,7 @@ func proxyLogin(ctx context.Context) error {
 		"address", ln.Addr().String(),
 	)
 
-	errCh := make(chan error, 1)
+	errCh := make(chan error)
 	connCh := make(chan net.Conn)
 
 	go func() {
@@ -93,7 +93,7 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 	wg := sync.WaitGroup{}
 	defer wg.Wait()
 
-	errCh := make(chan error, 1)
+	errCh := make(chan error)
 
 	go func() {
 		rd := bufio.NewReader(serverConn)

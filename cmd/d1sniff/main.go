@@ -53,7 +53,7 @@ func run() (exitCode int) {
 
 	wg := sync.WaitGroup{}
 
-	errCh := make(chan error, 1)
+	errCh := make(chan error)
 
 	wg.Add(1)
 	go func() {
