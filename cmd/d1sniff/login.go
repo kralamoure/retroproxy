@@ -90,9 +90,11 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 		serverConn: serverConn,
 	}
 
+	wg := sync.WaitGroup{}
+	defer wg.Wait()
+
 	errCh := make(chan error, 1)
 
-	serverPktCh := make(chan string, 64)
 	go func() {
 		rd := bufio.NewReader(serverConn)
 		for {
@@ -105,11 +107,16 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 			if pkt == "" {
 				continue
 			}
-			serverPktCh <- pkt
+			wg.Add(1)
+			err = handlePktFromLoginServer(sess, pkt)
+			wg.Done()
+			if err != nil {
+				errCh <- err
+				return
+			}
 		}
 	}()
 
-	clientPktCh := make(chan string, 64)
 	go func() {
 		rd := bufio.NewReader(sess.clientConn)
 		for {
@@ -122,27 +129,21 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 			if pkt == "" {
 				continue
 			}
-			clientPktCh <- pkt
+			wg.Add(1)
+			err = handlePktFromLoginClient(sess, pkt)
+			wg.Done()
+			if err != nil {
+				errCh <- err
+				return
+			}
 		}
 	}()
 
-	for {
-		select {
-		case pkt := <-clientPktCh:
-			err := handlePktFromLoginClient(sess, pkt)
-			if err != nil {
-				return err
-			}
-		case pkt := <-serverPktCh:
-			err := handlePktFromLoginServer(sess, pkt)
-			if err != nil {
-				return err
-			}
-		case err := <-errCh:
-			return err
-		case <-ctx.Done():
-			return ctx.Err()
-		}
+	select {
+	case err := <-errCh:
+		return err
+	case <-ctx.Done():
+		return ctx.Err()
 	}
 }
 
