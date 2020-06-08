@@ -57,16 +57,18 @@ func run() (exitCode int) {
 
 	wg.Add(1)
 	go func() {
-		defer wg.Done()
-		if err := proxyLogin(ctx); err != nil && !errors.Is(err, context.Canceled) {
+		err := proxyLogin(ctx)
+		wg.Done()
+		if err != nil && !errors.Is(err, context.Canceled) {
 			errCh <- fmt.Errorf("error while proxying login server: %w", err)
 		}
 	}()
 
 	wg.Add(1)
 	go func() {
-		defer wg.Done()
-		if err := proxyGame(ctx); err != nil && !errors.Is(err, context.Canceled) {
+		err := proxyGame(ctx)
+		wg.Done()
+		if err != nil && !errors.Is(err, context.Canceled) {
 			errCh <- fmt.Errorf("error while proxying game server: %w", err)
 		}
 	}()
