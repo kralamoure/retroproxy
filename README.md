@@ -31,7 +31,7 @@ go build ./cmd/d1sniff
 ## Installation
 
 ```sh
-go install github.com/kralamoure/d1sniff
+go get github.com/kralamoure/d1sniff
 ```
 
 ## Usage
