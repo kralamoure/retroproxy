@@ -20,12 +20,12 @@ func main() {
 }
 
 var (
-	logger         *zap.SugaredLogger
-	development    bool
-	loginProxyPort string
-	gameProxyPort  string
-	address        string
-	talkToEveryNPC bool
+	logger             *zap.SugaredLogger
+	development        bool
+	loginServerAddress string
+	loginProxyPort     string
+	gameProxyPort      string
+	talkToEveryNPC     bool
 )
 
 func run() (exitCode int) {
@@ -40,14 +40,14 @@ func run() (exitCode int) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		sig := <-sigs
+		sig := <-sigCh
 		logger.Infow("received signal",
 			"signal", sig.String(),
 		)
-		signal.Stop(sigs)
+		signal.Stop(sigCh)
 		cancel()
 	}()
 
@@ -97,7 +97,7 @@ func loadVars() {
 	flag.BoolVar(&development, "d", false, "Enable development mode")
 	flag.StringVar(&loginProxyPort, "lp", "5555", "Dofus login proxy port")
 	flag.StringVar(&gameProxyPort, "gp", "5556", "Dofus game proxy port")
-	flag.StringVar(&address, "a", "34.251.172.139:443", "Dofus login server address")
+	flag.StringVar(&loginServerAddress, "a", "34.251.172.139:443", "Dofus login server address")
 	flag.BoolVar(&talkToEveryNPC, "npc", true, "Automatically talk to every NPC")
 	flag.Parse()
 }
