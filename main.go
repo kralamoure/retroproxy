@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -53,7 +52,7 @@ func run() (exitCode int) {
 	go func() {
 		defer wg.Done()
 		err := proxyLogin(ctx)
-		if err != nil && !errors.Is(err, context.Canceled) {
+		if err != nil {
 			select {
 			case errCh <- fmt.Errorf("error while proxying login server: %w", err):
 			default:
@@ -65,7 +64,7 @@ func run() (exitCode int) {
 	go func() {
 		defer wg.Done()
 		err := proxyGame(ctx)
-		if err != nil && !errors.Is(err, context.Canceled) {
+		if err != nil {
 			select {
 			case errCh <- fmt.Errorf("error while proxying game server: %w", err):
 			default:
