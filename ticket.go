@@ -41,12 +41,12 @@ func useTicket(id string) (ticket, bool) {
 	return t, ok
 }
 
-func deleteOldTickets(d time.Duration) {
+func deleteOldTickets(maxDur time.Duration) {
 	ticketsMu.Lock()
 	defer ticketsMu.Unlock()
 	now := time.Now()
 	for id := range tickets {
-		deadline := tickets[id].issuedAt.Add(d)
+		deadline := tickets[id].issuedAt.Add(maxDur)
 		if now.After(deadline) {
 			delete(tickets, id)
 			logger.Debugw("deleted old ticket",

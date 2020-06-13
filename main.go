@@ -28,7 +28,7 @@ var (
 	talkToEveryNPC     bool
 )
 
-func run() int {
+func run() (exitCode int) {
 	wg := sync.WaitGroup{}
 	defer wg.Wait()
 
@@ -45,34 +45,38 @@ func run() int {
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
+	defer signal.Stop(sigCh)
 
-	errCh := make(chan error)
+	errCh := make(chan error, 1)
 
 	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		err := proxyLogin(ctx)
-		wg.Done()
 		if err != nil && !errors.Is(err, context.Canceled) {
-			errCh <- fmt.Errorf("error while proxying login server: %w", err)
+			select {
+			case errCh <- fmt.Errorf("error while proxying login server: %w", err):
+			default:
+			}
 		}
 	}()
 
 	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		err := proxyGame(ctx)
-		wg.Done()
 		if err != nil && !errors.Is(err, context.Canceled) {
-			errCh <- fmt.Errorf("error while proxying game server: %w", err)
+			select {
+			case errCh <- fmt.Errorf("error while proxying game server: %w", err):
+			default:
+			}
 		}
 	}()
 
+	wg.Add(1)
 	go func() {
-		for {
-			wg.Add(1)
-			deleteOldTickets(10 * time.Second)
-			wg.Done()
-			time.Sleep(1 * time.Second)
-		}
+		defer wg.Done()
+		deleteOldTicketsLoop(ctx, 10*time.Second)
 	}()
 
 	select {
@@ -80,20 +84,12 @@ func run() int {
 		logger.Infow("received signal",
 			"signal", sig.String(),
 		)
-		signal.Stop(sigCh)
-		cancel()
-		exitStatus := 1
-		if sig, ok := sig.(syscall.Signal); ok {
-			exitStatus = 128 + int(sig)
-		}
-		return exitStatus
 	case err := <-errCh:
 		logger.Error(err)
-		cancel()
-		return 1
+		exitCode = 1
 	case <-ctx.Done():
 	}
-	return 0
+	return
 }
 
 func loadVars() {
@@ -120,4 +116,18 @@ func loadLogger() error {
 		logger = tmp.Sugar()
 	}
 	return nil
+}
+
+func deleteOldTicketsLoop(ctx context.Context, maxDur time.Duration) {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			deleteOldTickets(maxDur)
+		case <-ctx.Done():
+			return
+		}
+	}
 }
