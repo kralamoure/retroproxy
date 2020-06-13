@@ -28,7 +28,10 @@ var (
 	talkToEveryNPC     bool
 )
 
-func run() (exitCode int) {
+func run() int {
+	wg := sync.WaitGroup{}
+	defer wg.Wait()
+
 	loadVars()
 
 	if err := loadLogger(); err != nil {
@@ -41,17 +44,7 @@ func run() (exitCode int) {
 	defer cancel()
 
 	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		sig := <-sigCh
-		logger.Infow("received signal",
-			"signal", sig.String(),
-		)
-		signal.Stop(sigCh)
-		cancel()
-	}()
-
-	wg := sync.WaitGroup{}
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 
 	errCh := make(chan error)
 
@@ -83,14 +76,24 @@ func run() (exitCode int) {
 	}()
 
 	select {
-	case <-ctx.Done():
+	case sig := <-sigCh:
+		logger.Infow("received signal",
+			"signal", sig.String(),
+		)
+		signal.Stop(sigCh)
+		cancel()
+		exitStatus := 1
+		if sig, ok := sig.(syscall.Signal); ok {
+			exitStatus = 128 + int(sig)
+		}
+		return exitStatus
 	case err := <-errCh:
 		logger.Error(err)
-		exitCode = 1
 		cancel()
+		return 1
+	case <-ctx.Done():
 	}
-	wg.Wait()
-	return exitCode
+	return 0
 }
 
 func loadVars() {
