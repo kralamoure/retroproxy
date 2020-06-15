@@ -82,7 +82,7 @@ func (p *loginProxy) handleClientConn(ctx context.Context, conn net.Conn) error 
 
 	s := &loginSession{
 		clientConn: conn,
-		serverId:   make(chan int),
+		serverIdCh: make(chan int),
 	}
 
 	serverConn, err := net.Dial("tcp4", loginServerAddress)

@@ -7,6 +7,8 @@ import (
 	"io"
 	"net"
 	"sync"
+
+	"github.com/kralamoure/d1proto/msgsvr"
 )
 
 type gameProxy struct {
@@ -82,27 +84,20 @@ func (p *gameProxy) handleClientConn(ctx context.Context, conn net.Conn) error {
 
 	s := &gameSession{
 		clientConn: conn,
-		serverId:   make(chan int),
+		ticketCh:   make(chan ticket),
 	}
 
-	serverConn, err := net.Dial("tcp4", gameServerAddress)
+	err := s.sendMsgToClient(&msgsvr.AksHelloGame{})
 	if err != nil {
 		return err
 	}
-	defer serverConn.Close()
-	logger.Infow("connected to game server",
-		"local_address", serverConn.LocalAddr().String(),
-		"server_address", serverConn.RemoteAddr().String(),
-		"client_address", conn.RemoteAddr().String(),
-	)
-	s.serverConn = serverConn
 
 	errCh := make(chan error)
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := s.receivePktsFromServer(ctx)
+		err := s.connectToServer(ctx)
 		if err != nil {
 			select {
 			case errCh <- err:

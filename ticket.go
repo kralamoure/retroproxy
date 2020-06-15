@@ -6,9 +6,9 @@ import (
 )
 
 type ticket struct {
-	host             string
-	port             string
-	originalTicketId string
+	host     string
+	port     string
+	original string
 
 	issuedAt time.Time
 	serverId int
@@ -23,7 +23,7 @@ func setTicket(id string, t ticket) {
 	ticketsMu.Lock()
 	defer ticketsMu.Unlock()
 	tickets[id] = t
-	logger.Debugw("set ticket",
+	logger.Debugw("ticket set",
 		"ticket_id", id,
 	)
 }
@@ -34,7 +34,7 @@ func useTicket(id string) (ticket, bool) {
 	t, ok := tickets[id]
 	if ok {
 		delete(tickets, id)
-		logger.Debugw("used ticket",
+		logger.Debugw("ticket used",
 			"ticket_id", id,
 		)
 	}
@@ -49,7 +49,7 @@ func deleteOldTickets(maxDur time.Duration) {
 		deadline := tickets[id].issuedAt.Add(maxDur)
 		if now.After(deadline) {
 			delete(tickets, id)
-			logger.Debugw("deleted old ticket",
+			logger.Debugw("old ticket deleted",
 				"ticket_id", id,
 			)
 		}

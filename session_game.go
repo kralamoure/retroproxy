@@ -3,12 +3,11 @@ package main
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"strings"
-	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/kralamoure/d1proto"
 	"github.com/kralamoure/d1proto/msgcli"
 	"github.com/kralamoure/d1proto/msgsvr"
@@ -17,7 +16,51 @@ import (
 type gameSession struct {
 	clientConn net.Conn
 	serverConn net.Conn
-	serverId   chan int
+	// serverId   int
+
+	ticket   ticket
+	ticketCh chan ticket
+}
+
+func (s *gameSession) connectToServer(ctx context.Context) error {
+	errCh := make(chan error)
+
+	select {
+	case t := <-s.ticketCh:
+		s.ticket = t
+
+		addr := net.JoinHostPort(t.host, t.port)
+		conn, err := net.Dial("tcp4", addr)
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
+		logger.Infow("connected to game server",
+			"local_address", conn.LocalAddr().String(),
+			"server_address", conn.RemoteAddr().String(),
+			"client_address", s.clientConn.RemoteAddr().String(),
+		)
+		s.serverConn = conn
+
+		go func() {
+			err = s.receivePktsFromServer(ctx)
+			if err != nil {
+				select {
+				case errCh <- err:
+				case <-ctx.Done():
+				}
+			}
+		}()
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+
+	select {
+	case err := <-errCh:
+		return err
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 func (s *gameSession) receivePktsFromServer(ctx context.Context) error {
@@ -66,54 +109,15 @@ func (s *gameSession) handlePktFromServer(ctx context.Context, pkt string) error
 		"packet", pkt,
 	)
 	if ok {
-		extra := strings.TrimPrefix(pkt, string(id))
 		switch id {
-		case d1proto.AccountSelectServerError:
-			select {
-			case <-s.serverId:
-			case <-ctx.Done():
-				return ctx.Err()
-			}
-		case d1proto.AccountSelectServerSuccess:
-			var serverId int
-			select {
-			case serverId = <-s.serverId:
-			case <-ctx.Done():
-				return ctx.Err()
-			}
-
-			msg := &msgsvr.AccountSelectServerSuccess{}
-			err := msg.Deserialize(extra)
-			if err != nil {
-				return err
-			}
-
-			id, err := uuid.NewV4()
-			if err != nil {
-				return err
-			}
-
-			setTicket(id.String(), ticket{
-				host:             msg.Host,
-				port:             msg.Port,
-				originalTicketId: msg.Ticket,
-				serverId:         serverId,
-				issuedAt:         time.Now(),
-			})
-
-			msgOut := &msgsvr.AccountSelectServerPlainSuccess{
-				Host:   "localhost",
-				Port:   gameProxyPort,
-				Ticket: id.String(),
-			}
-			err = s.sendMsgToClient(msgOut)
+		case d1proto.AksHelloGame:
+			err := s.sendMsgToServer(&msgcli.AccountSendTicket{Ticket: s.ticket.original})
 			if err != nil {
 				return err
 			}
 			return nil
 		}
 	}
-
 	s.sendPktToClient(pkt)
 	return nil
 }
@@ -129,21 +133,30 @@ func (s *gameSession) handlePktFromClient(ctx context.Context, pkt string) error
 	if ok {
 		extra := strings.TrimPrefix(pkt, string(id))
 		switch id {
-		case d1proto.AccountSetServer:
-			msg := &msgcli.AccountSetServer{}
+		case d1proto.AccountSendTicket:
+			msg := &msgcli.AccountSendTicket{}
 			err := msg.Deserialize(extra)
 			if err != nil {
 				return err
 			}
 
+			t, ok := useTicket(msg.Ticket)
+			if !ok {
+				err := s.sendMsgToClient(&msgsvr.AccountTicketResponseError{})
+				if err != nil {
+					return err
+				}
+				return errors.New("ticket not found")
+			}
+
 			select {
-			case s.serverId <- msg.Id:
+			case s.ticketCh <- t:
 			case <-ctx.Done():
 				return ctx.Err()
 			}
+			return nil
 		}
 	}
-
 	s.sendPktToServer(pkt)
 	return nil
 }

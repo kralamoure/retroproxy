@@ -17,7 +17,7 @@ import (
 type loginSession struct {
 	clientConn net.Conn
 	serverConn net.Conn
-	serverId   chan int
+	serverIdCh chan int
 }
 
 func (s *loginSession) receivePktsFromServer(ctx context.Context) error {
@@ -70,14 +70,14 @@ func (s *loginSession) handlePktFromServer(ctx context.Context, pkt string) erro
 		switch id {
 		case d1proto.AccountSelectServerError:
 			select {
-			case <-s.serverId:
+			case <-s.serverIdCh:
 			case <-ctx.Done():
 				return ctx.Err()
 			}
 		case d1proto.AccountSelectServerSuccess:
 			var serverId int
 			select {
-			case serverId = <-s.serverId:
+			case serverId = <-s.serverIdCh:
 			case <-ctx.Done():
 				return ctx.Err()
 			}
@@ -94,11 +94,11 @@ func (s *loginSession) handlePktFromServer(ctx context.Context, pkt string) erro
 			}
 
 			setTicket(id.String(), ticket{
-				host:             msg.Host,
-				port:             msg.Port,
-				originalTicketId: msg.Ticket,
-				serverId:         serverId,
-				issuedAt:         time.Now(),
+				host:     msg.Host,
+				port:     msg.Port,
+				original: msg.Ticket,
+				serverId: serverId,
+				issuedAt: time.Now(),
 			})
 
 			msgOut := &msgsvr.AccountSelectServerPlainSuccess{
@@ -136,11 +136,14 @@ func (s *loginSession) handlePktFromClient(ctx context.Context, pkt string) erro
 				return err
 			}
 
+			s.sendPktToServer(pkt)
+
 			select {
-			case s.serverId <- msg.Id:
+			case s.serverIdCh <- msg.Id:
 			case <-ctx.Done():
 				return ctx.Err()
 			}
+			return nil
 		}
 	}
 
