@@ -25,11 +25,11 @@ func (p *gameProxy) start(ctx context.Context) error {
 	}
 	defer func() {
 		ln.Close()
-		logger.Infow("game proxy ended",
+		logger.Infow("game proxy listener closed",
 			"address", ln.Addr().String(),
 		)
 	}()
-	logger.Infow("game proxy started",
+	logger.Infow("game proxy listening",
 		"address", ln.Addr().String(),
 	)
 	p.ln = ln
