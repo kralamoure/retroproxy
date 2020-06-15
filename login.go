@@ -97,7 +97,7 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := sess.readFromServerLoop()
+		err := sess.readFromServer()
 		if err != nil {
 			select {
 			case errCh <- err:
@@ -109,7 +109,7 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := sess.readFromClientLoop()
+		err := sess.readFromClient()
 		if err != nil {
 			select {
 			case errCh <- err:
@@ -126,7 +126,7 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 	}
 }
 
-func (s *loginSession) readFromServerLoop() error {
+func (s *loginSession) readFromServer() error {
 	rd := bufio.NewReader(s.serverConn)
 	for {
 		pkt, err := rd.ReadString('\x00')
@@ -137,14 +137,14 @@ func (s *loginSession) readFromServerLoop() error {
 		if pkt == "" {
 			continue
 		}
-		err = s.handlePktFromLoginServer(pkt)
+		err = s.handlePktFromServer(pkt)
 		if err != nil {
 			return err
 		}
 	}
 }
 
-func (s *loginSession) readFromClientLoop() error {
+func (s *loginSession) readFromClient() error {
 	rd := bufio.NewReader(s.clientConn)
 	for {
 		pkt, err := rd.ReadString('\x00')
@@ -155,14 +155,14 @@ func (s *loginSession) readFromClientLoop() error {
 		if pkt == "" {
 			continue
 		}
-		err = s.handlePktFromLoginClient(pkt)
+		err = s.handlePktFromClient(pkt)
 		if err != nil {
 			return err
 		}
 	}
 }
 
-func (s *loginSession) handlePktFromLoginClient(pkt string) error {
+func (s *loginSession) handlePktFromClient(pkt string) error {
 	id, ok := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
 	logger.Debugw("received packet from login client",
@@ -183,11 +183,11 @@ func (s *loginSession) handlePktFromLoginClient(pkt string) error {
 		}
 	}
 
-	s.sendPktToLoginServer(pkt)
+	s.sendPktToServer(pkt)
 	return nil
 }
 
-func (s *loginSession) handlePktFromLoginServer(pkt string) error {
+func (s *loginSession) handlePktFromServer(pkt string) error {
 	id, ok := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
 	logger.Infow("received packet from login server",
@@ -224,7 +224,7 @@ func (s *loginSession) handlePktFromLoginServer(pkt string) error {
 				Port:   gameProxyPort,
 				Ticket: id.String(),
 			}
-			err = s.sendMsgToLoginClient(msgOut)
+			err = s.sendMsgToClient(msgOut)
 			if err != nil {
 				return err
 			}
@@ -232,20 +232,20 @@ func (s *loginSession) handlePktFromLoginServer(pkt string) error {
 		}
 	}
 
-	s.sendPktToLoginClient(pkt)
+	s.sendPktToClient(pkt)
 	return nil
 }
 
-func (s *loginSession) sendMsgToLoginClient(msg d1proto.MsgSvr) error {
+func (s *loginSession) sendMsgToClient(msg d1proto.MsgSvr) error {
 	pkt, err := msg.Serialized()
 	if err != nil {
 		return err
 	}
-	s.sendPktToLoginClient(fmt.Sprint(msg.ProtocolId(), pkt))
+	s.sendPktToClient(fmt.Sprint(msg.ProtocolId(), pkt))
 	return nil
 }
 
-func (s *loginSession) sendPktToLoginClient(pkt string) {
+func (s *loginSession) sendPktToClient(pkt string) {
 	id, _ := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
 	logger.Infow("sent packet to login client",
@@ -256,7 +256,7 @@ func (s *loginSession) sendPktToLoginClient(pkt string) {
 	fmt.Fprint(s.clientConn, pkt+"\x00")
 }
 
-func (s *loginSession) sendPktToLoginServer(pkt string) {
+func (s *loginSession) sendPktToServer(pkt string) {
 	id, _ := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
 	logger.Infow("sent packet to login server",
