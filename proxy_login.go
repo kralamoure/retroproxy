@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"sync"
 )
@@ -59,7 +61,7 @@ func (p *loginProxy) acceptClientConns(ctx context.Context) error {
 		go func() {
 			defer wg.Done()
 			err := p.handleClientConn(ctx, conn)
-			if err != nil /*&& !errors.Is(err, context.Canceled) && !errors.Is(err, io.EOF)*/ {
+			if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, io.EOF) {
 				logger.Debugf("error while handling login client connection: %s", err)
 			}
 		}()
