@@ -91,13 +91,18 @@ func run() int {
 	return 0
 }
 
-func loadVars() {
-	flag.BoolVar(&development, "d", false, "Enable development mode")
-	flag.StringVar(&loginServerAddress, "a", "34.251.172.139:443", "Dofus login server address")
-	flag.StringVar(&loginProxyPort, "lp", "5555", "Dofus login proxy port")
-	flag.StringVar(&gameProxyPort, "gp", "5556", "Dofus game proxy port")
-	flag.BoolVar(&talkToEveryNPC, "npc", true, "Automatically talk to every NPC")
-	flag.Parse()
+func deleteOldTicketsLoop(ctx context.Context, maxDur time.Duration) {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			deleteOldTickets(maxDur)
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
 func loadLogger() error {
@@ -117,16 +122,11 @@ func loadLogger() error {
 	return nil
 }
 
-func deleteOldTicketsLoop(ctx context.Context, maxDur time.Duration) {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			deleteOldTickets(maxDur)
-		case <-ctx.Done():
-			return
-		}
-	}
+func loadVars() {
+	flag.BoolVar(&development, "d", false, "Enable development mode")
+	flag.StringVar(&loginServerAddress, "a", "34.251.172.139:443", "Dofus login server address")
+	flag.StringVar(&loginProxyPort, "lp", "5555", "Dofus login proxy port")
+	flag.StringVar(&gameProxyPort, "gp", "5556", "Dofus game proxy port")
+	flag.BoolVar(&talkToEveryNPC, "npc", true, "Automatically talk to every NPC")
+	flag.Parse()
 }
