@@ -74,7 +74,7 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 		"client_address", conn.RemoteAddr().String(),
 	)
 
-	serverConn, err := net.Dial("tcp", loginServerAddress)
+	serverConn, err := net.Dial("tcp4", loginServerAddress)
 	if err != nil {
 		return err
 	}
