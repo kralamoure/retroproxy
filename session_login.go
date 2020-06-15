@@ -11,12 +11,13 @@ import (
 	"github.com/kralamoure/d1proto"
 	"github.com/kralamoure/d1proto/msgcli"
 	"github.com/kralamoure/d1proto/msgsvr"
+	"go.uber.org/atomic"
 )
 
 type loginSession struct {
 	clientConn net.Conn
 	serverConn net.Conn
-	serverId   int
+	serverId   atomic.Int32
 }
 
 func (s *loginSession) receivePktsFromServer() error {
@@ -55,31 +56,6 @@ func (s *loginSession) receivePktsFromClient() error {
 	}
 }
 
-func (s *loginSession) handlePktFromClient(pkt string) error {
-	id, ok := d1proto.MsgCliIdByPkt(pkt)
-	name, _ := d1proto.MsgCliNameByID(id)
-	logger.Debugw("received packet from login client",
-		"client_address", s.clientConn.RemoteAddr().String(),
-		"message_name", name,
-		"packet", pkt,
-	)
-	if ok {
-		extra := strings.TrimPrefix(pkt, string(id))
-		switch id {
-		case d1proto.AccountSetServer:
-			msg := &msgcli.AccountSetServer{}
-			err := msg.Deserialize(extra)
-			if err != nil {
-				return err
-			}
-			s.serverId = msg.Id
-		}
-	}
-
-	s.sendPktToServer(pkt)
-	return nil
-}
-
 func (s *loginSession) handlePktFromServer(pkt string) error {
 	id, ok := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
@@ -108,7 +84,7 @@ func (s *loginSession) handlePktFromServer(pkt string) error {
 				host:             msg.Host,
 				port:             msg.Port,
 				originalTicketId: msg.Ticket,
-				serverId:         s.serverId,
+				serverId:         int(s.serverId.Load()),
 				issuedAt:         time.Now(),
 			})
 
@@ -129,6 +105,40 @@ func (s *loginSession) handlePktFromServer(pkt string) error {
 	return nil
 }
 
+func (s *loginSession) handlePktFromClient(pkt string) error {
+	id, ok := d1proto.MsgCliIdByPkt(pkt)
+	name, _ := d1proto.MsgCliNameByID(id)
+	logger.Debugw("received packet from login client",
+		"client_address", s.clientConn.RemoteAddr().String(),
+		"message_name", name,
+		"packet", pkt,
+	)
+	if ok {
+		extra := strings.TrimPrefix(pkt, string(id))
+		switch id {
+		case d1proto.AccountSetServer:
+			msg := &msgcli.AccountSetServer{}
+			err := msg.Deserialize(extra)
+			if err != nil {
+				return err
+			}
+			s.serverId.Store(int32(msg.Id))
+		}
+	}
+
+	s.sendPktToServer(pkt)
+	return nil
+}
+
+func (s *loginSession) sendMsgToServer(msg d1proto.MsgCli) error {
+	pkt, err := msg.Serialized()
+	if err != nil {
+		return err
+	}
+	s.sendPktToServer(fmt.Sprint(msg.ProtocolId(), pkt))
+	return nil
+}
+
 func (s *loginSession) sendMsgToClient(msg d1proto.MsgSvr) error {
 	pkt, err := msg.Serialized()
 	if err != nil {
@@ -136,17 +146,6 @@ func (s *loginSession) sendMsgToClient(msg d1proto.MsgSvr) error {
 	}
 	s.sendPktToClient(fmt.Sprint(msg.ProtocolId(), pkt))
 	return nil
-}
-
-func (s *loginSession) sendPktToClient(pkt string) {
-	id, _ := d1proto.MsgSvrIdByPkt(pkt)
-	name, _ := d1proto.MsgSvrNameByID(id)
-	logger.Infow("sent packet to login client",
-		"client_address", s.clientConn.RemoteAddr().String(),
-		"message_name", name,
-		"packet", pkt,
-	)
-	fmt.Fprint(s.clientConn, pkt+"\x00")
 }
 
 func (s *loginSession) sendPktToServer(pkt string) {
@@ -158,4 +157,15 @@ func (s *loginSession) sendPktToServer(pkt string) {
 		"packet", pkt,
 	)
 	fmt.Fprint(s.serverConn, pkt+"\n\x00")
+}
+
+func (s *loginSession) sendPktToClient(pkt string) {
+	id, _ := d1proto.MsgSvrIdByPkt(pkt)
+	name, _ := d1proto.MsgSvrNameByID(id)
+	logger.Infow("sent packet to login client",
+		"client_address", s.clientConn.RemoteAddr().String(),
+		"message_name", name,
+		"packet", pkt,
+	)
+	fmt.Fprint(s.clientConn, pkt+"\x00")
 }
