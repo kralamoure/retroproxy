@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"net"
 	"strings"
@@ -11,16 +12,15 @@ import (
 	"github.com/kralamoure/d1proto"
 	"github.com/kralamoure/d1proto/msgcli"
 	"github.com/kralamoure/d1proto/msgsvr"
-	"go.uber.org/atomic"
 )
 
 type loginSession struct {
 	clientConn net.Conn
 	serverConn net.Conn
-	serverId   atomic.Int32
+	serverId   chan int
 }
 
-func (s *loginSession) receivePktsFromServer() error {
+func (s *loginSession) receivePktsFromServer(ctx context.Context) error {
 	rd := bufio.NewReader(s.serverConn)
 	for {
 		pkt, err := rd.ReadString('\x00')
@@ -31,14 +31,14 @@ func (s *loginSession) receivePktsFromServer() error {
 		if pkt == "" {
 			continue
 		}
-		err = s.handlePktFromServer(pkt)
+		err = s.handlePktFromServer(ctx, pkt)
 		if err != nil {
 			return err
 		}
 	}
 }
 
-func (s *loginSession) receivePktsFromClient() error {
+func (s *loginSession) receivePktsFromClient(ctx context.Context) error {
 	rd := bufio.NewReader(s.clientConn)
 	for {
 		pkt, err := rd.ReadString('\x00')
@@ -49,14 +49,14 @@ func (s *loginSession) receivePktsFromClient() error {
 		if pkt == "" {
 			continue
 		}
-		err = s.handlePktFromClient(pkt)
+		err = s.handlePktFromClient(ctx, pkt)
 		if err != nil {
 			return err
 		}
 	}
 }
 
-func (s *loginSession) handlePktFromServer(pkt string) error {
+func (s *loginSession) handlePktFromServer(ctx context.Context, pkt string) error {
 	id, ok := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
 	logger.Infow("received packet from login server",
@@ -68,7 +68,20 @@ func (s *loginSession) handlePktFromServer(pkt string) error {
 	if ok {
 		extra := strings.TrimPrefix(pkt, string(id))
 		switch id {
+		case d1proto.AccountSelectServerError:
+			select {
+			case <-s.serverId:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		case d1proto.AccountSelectServerSuccess:
+			var serverId int
+			select {
+			case serverId = <-s.serverId:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+
 			msg := &msgsvr.AccountSelectServerSuccess{}
 			err := msg.Deserialize(extra)
 			if err != nil {
@@ -84,7 +97,7 @@ func (s *loginSession) handlePktFromServer(pkt string) error {
 				host:             msg.Host,
 				port:             msg.Port,
 				originalTicketId: msg.Ticket,
-				serverId:         int(s.serverId.Load()),
+				serverId:         serverId,
 				issuedAt:         time.Now(),
 			})
 
@@ -105,7 +118,7 @@ func (s *loginSession) handlePktFromServer(pkt string) error {
 	return nil
 }
 
-func (s *loginSession) handlePktFromClient(pkt string) error {
+func (s *loginSession) handlePktFromClient(ctx context.Context, pkt string) error {
 	id, ok := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
 	logger.Debugw("received packet from login client",
@@ -122,7 +135,12 @@ func (s *loginSession) handlePktFromClient(pkt string) error {
 			if err != nil {
 				return err
 			}
-			s.serverId.Store(int32(msg.Id))
+
+			select {
+			case s.serverId <- msg.Id:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
 	}
 

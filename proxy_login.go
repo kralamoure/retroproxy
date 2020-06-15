@@ -77,8 +77,12 @@ func (p *loginProxy) handleClientConn(ctx context.Context, conn net.Conn) error 
 		"client_address", conn.RemoteAddr().String(),
 	)
 
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	s := &loginSession{
 		clientConn: conn,
+		serverId:   make(chan int),
 	}
 
 	serverConn, err := net.Dial("tcp4", loginServerAddress)
@@ -98,7 +102,7 @@ func (p *loginProxy) handleClientConn(ctx context.Context, conn net.Conn) error 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := s.receivePktsFromServer()
+		err := s.receivePktsFromServer(ctx)
 		if err != nil {
 			select {
 			case errCh <- err:
@@ -110,7 +114,7 @@ func (p *loginProxy) handleClientConn(ctx context.Context, conn net.Conn) error 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := s.receivePktsFromClient()
+		err := s.receivePktsFromClient(ctx)
 		if err != nil {
 			select {
 			case errCh <- err:
