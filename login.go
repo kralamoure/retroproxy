@@ -32,7 +32,9 @@ func proxyLogin(ctx context.Context) error {
 
 	errCh := make(chan error)
 	connCh := make(chan net.Conn)
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		for {
 			conn, err := ln.Accept()
 			if err != nil {
@@ -92,58 +94,26 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 
 	errCh := make(chan error)
 
+	wg.Add(1)
 	go func() {
-		rd := bufio.NewReader(serverConn)
-		for {
-			pkt, err := rd.ReadString('\x00')
-			if err != nil {
-				select {
-				case errCh <- err:
-				case <-ctx.Done():
-				}
-				return
-			}
-			pkt = strings.TrimSuffix(pkt, "\x00")
-			if pkt == "" {
-				continue
-			}
-			wg.Add(1)
-			err = handlePktFromLoginServer(sess, pkt)
-			wg.Done()
-			if err != nil {
-				select {
-				case errCh <- err:
-				case <-ctx.Done():
-				}
-				return
+		defer wg.Done()
+		err := sess.readFromServerLoop()
+		if err != nil {
+			select {
+			case errCh <- err:
+			case <-ctx.Done():
 			}
 		}
 	}()
 
+	wg.Add(1)
 	go func() {
-		rd := bufio.NewReader(sess.clientConn)
-		for {
-			pkt, err := rd.ReadString('\x00')
-			if err != nil {
-				select {
-				case errCh <- err:
-				case <-ctx.Done():
-				}
-				return
-			}
-			pkt = strings.TrimSuffix(pkt, "\n\x00")
-			if pkt == "" {
-				continue
-			}
-			wg.Add(1)
-			err = handlePktFromLoginClient(sess, pkt)
-			wg.Done()
-			if err != nil {
-				select {
-				case errCh <- err:
-				case <-ctx.Done():
-				}
-				return
+		defer wg.Done()
+		err := sess.readFromClientLoop()
+		if err != nil {
+			select {
+			case errCh <- err:
+			case <-ctx.Done():
 			}
 		}
 	}()
@@ -156,36 +126,38 @@ func handleLoginConn(ctx context.Context, conn net.Conn) error {
 	}
 }
 
-func (s *loginSession) readFromServerLoop(ctx context.Context) error {
-	errCh := make(chan error, 1)
-	pktCh := make(chan string, 1)
+func (s *loginSession) readFromServerLoop() error {
 	rd := bufio.NewReader(s.serverConn)
-	go func() {
-		for {
-			pkt, err := rd.ReadString('\x00')
-			if err != nil {
-				errCh <- err
-				return
-			}
-			pkt = strings.TrimSuffix(pkt, "\x00")
-			if pkt == "" {
-				continue
-			}
-			pktCh <- pkt
-		}
-	}()
-
 	for {
-		select {
-		case pkt := <-pktCh:
-			err := handlePktFromLoginServer(s, pkt)
-			if err != nil {
-				return err
-			}
-		case err := <-errCh:
+		pkt, err := rd.ReadString('\x00')
+		if err != nil {
 			return err
-		case <-ctx.Done():
-			return ctx.Err()
+		}
+		pkt = strings.TrimSuffix(pkt, "\x00")
+		if pkt == "" {
+			continue
+		}
+		err = handlePktFromLoginServer(s, pkt)
+		if err != nil {
+			return err
+		}
+	}
+}
+
+func (s *loginSession) readFromClientLoop() error {
+	rd := bufio.NewReader(s.clientConn)
+	for {
+		pkt, err := rd.ReadString('\x00')
+		if err != nil {
+			return err
+		}
+		pkt = strings.TrimSuffix(pkt, "\n\x00")
+		if pkt == "" {
+			continue
+		}
+		err = handlePktFromLoginClient(s, pkt)
+		if err != nil {
+			return err
 		}
 	}
 }
