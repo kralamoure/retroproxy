@@ -79,11 +79,11 @@ func (p *loginProxy) handleClientConn(ctx context.Context, conn net.Conn) error 
 
 	defer func() {
 		conn.Close()
-		logger.Infow("client disconnected",
+		logger.Infow("login client disconnected",
 			"client_address", conn.RemoteAddr().String(),
 		)
 	}()
-	logger.Infow("new connection from login client",
+	logger.Infow("login client connected",
 		"client_address", conn.RemoteAddr().String(),
 	)
 

@@ -79,8 +79,13 @@ func (p *gameProxy) handleClientConn(ctx context.Context, conn net.Conn) error {
 	wg := sync.WaitGroup{}
 	defer wg.Wait()
 
-	defer conn.Close()
-	logger.Infow("new connection from game client",
+	defer func() {
+		conn.Close()
+		logger.Infow("game client disconnected",
+			"client_address", conn.RemoteAddr().String(),
+		)
+	}()
+	logger.Infow("game client connected",
 		"client_address", conn.RemoteAddr().String(),
 	)
 
