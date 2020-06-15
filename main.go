@@ -51,7 +51,8 @@ func run() int {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := proxyLogin(ctx)
+		var proxy loginProxy
+		err := proxy.start(ctx)
 		if err != nil {
 			select {
 			case errCh <- fmt.Errorf("error while proxying login server: %w", err):
