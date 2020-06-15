@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"io"
 	"net"
 	"sync"
 )
@@ -28,45 +26,43 @@ func (p *loginProxy) start(ctx context.Context) error {
 	p.ln = ln
 
 	errCh := make(chan error)
-	connCh := make(chan net.Conn)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := p.acceptConns(connCh)
+		err := p.acceptClientConns(ctx)
 		if err != nil {
 			select {
-			case errCh <- fmt.Errorf("error while accepting login proxy conns: %w", err):
+			case errCh <- fmt.Errorf("error while accepting login client connections: %w", err):
 			case <-ctx.Done():
 			}
 		}
 	}()
 
-	for {
-		select {
-		case conn := <-connCh:
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				err := p.handleClientConn(ctx, conn)
-				if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, io.EOF) {
-					logger.Debugf("error while handling login connection: %s", err)
-				}
-			}()
-		case err := <-errCh:
-			return err
-		case <-ctx.Done():
-			return ctx.Err()
-		}
+	select {
+	case err := <-errCh:
+		return err
+	case <-ctx.Done():
+		return ctx.Err()
 	}
 }
 
-func (p *loginProxy) acceptConns(connCh chan<- net.Conn) error {
+func (p *loginProxy) acceptClientConns(ctx context.Context) error {
+	wg := sync.WaitGroup{}
+	defer wg.Wait()
+
 	for {
 		conn, err := p.ln.Accept()
 		if err != nil {
 			return err
 		}
-		connCh <- conn
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := p.handleClientConn(ctx, conn)
+			if err != nil /*&& !errors.Is(err, context.Canceled) && !errors.Is(err, io.EOF)*/ {
+				logger.Debugf("error while handling login client connection: %s", err)
+			}
+		}()
 	}
 }
 
