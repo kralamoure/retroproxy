@@ -64,7 +64,8 @@ func run() int {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := proxyGame(ctx)
+		var proxy gameProxy
+		err := proxy.start(ctx)
 		if err != nil {
 			select {
 			case errCh <- fmt.Errorf("error while proxying game server: %w", err):
