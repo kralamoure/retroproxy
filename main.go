@@ -29,7 +29,7 @@ var (
 )
 
 func run() int {
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	defer wg.Wait()
 
 	loadVars()

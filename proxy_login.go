@@ -14,7 +14,7 @@ type loginProxy struct {
 }
 
 func (p *loginProxy) start(ctx context.Context) error {
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	defer wg.Wait()
 
 	ln, err := net.Listen("tcp4", net.JoinHostPort("localhost", loginProxyPort))
@@ -54,7 +54,7 @@ func (p *loginProxy) start(ctx context.Context) error {
 }
 
 func (p *loginProxy) acceptClientConns(ctx context.Context) error {
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	defer wg.Wait()
 
 	for {
@@ -74,7 +74,7 @@ func (p *loginProxy) acceptClientConns(ctx context.Context) error {
 }
 
 func (p *loginProxy) handleClientConn(ctx context.Context, conn net.Conn) error {
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	defer wg.Wait()
 
 	defer func() {

@@ -16,7 +16,7 @@ type gameProxy struct {
 }
 
 func (p *gameProxy) start(ctx context.Context) error {
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	defer wg.Wait()
 
 	ln, err := net.Listen("tcp4", net.JoinHostPort("localhost", gameProxyPort))
@@ -56,7 +56,7 @@ func (p *gameProxy) start(ctx context.Context) error {
 }
 
 func (p *gameProxy) acceptClientConns(ctx context.Context) error {
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	defer wg.Wait()
 
 	for {
@@ -76,7 +76,7 @@ func (p *gameProxy) acceptClientConns(ctx context.Context) error {
 }
 
 func (p *gameProxy) handleClientConn(ctx context.Context, conn net.Conn) error {
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	defer wg.Wait()
 
 	defer func() {
