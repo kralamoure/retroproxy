@@ -27,7 +27,7 @@ var (
 	talkToEveryNPC     bool
 )
 
-func run() (exitCode int) {
+func run() int {
 	wg := sync.WaitGroup{}
 	defer wg.Wait()
 
@@ -46,7 +46,7 @@ func run() (exitCode int) {
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 	defer signal.Stop(sigCh)
 
-	errCh := make(chan error, 1)
+	errCh := make(chan error)
 
 	wg.Add(1)
 	go func() {
@@ -55,7 +55,7 @@ func run() (exitCode int) {
 		if err != nil {
 			select {
 			case errCh <- fmt.Errorf("error while proxying login server: %w", err):
-			default:
+			case <-ctx.Done():
 			}
 		}
 	}()
@@ -67,7 +67,7 @@ func run() (exitCode int) {
 		if err != nil {
 			select {
 			case errCh <- fmt.Errorf("error while proxying game server: %w", err):
-			default:
+			case <-ctx.Done():
 			}
 		}
 	}()
@@ -85,10 +85,10 @@ func run() (exitCode int) {
 		)
 	case err := <-errCh:
 		logger.Error(err)
-		exitCode = 1
+		return 1
 	case <-ctx.Done():
 	}
-	return
+	return 0
 }
 
 func loadVars() {

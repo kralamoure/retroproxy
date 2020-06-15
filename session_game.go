@@ -7,7 +7,7 @@ import (
 	"github.com/kralamoure/d1proto/msgsvr"
 )
 
-type session struct {
+type gameSession struct {
 	clientConn net.Conn
 	serverConn net.Conn
 	serverId   int

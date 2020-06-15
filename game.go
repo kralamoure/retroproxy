@@ -82,7 +82,7 @@ func handleGameConn(ctx context.Context, conn net.Conn) error {
 		"client_address", conn.RemoteAddr().String(),
 	)
 
-	sess := &session{
+	sess := &gameSession{
 		clientConn:         conn,
 		gameServerCh:       make(chan msgsvr.AccountSelectServerSuccess, 1),
 		gameServerPktCh:    make(chan string, 64),
@@ -168,7 +168,7 @@ LOOP:
 	return loopErr
 }
 
-func connectToGameServer(ctx context.Context, sess *session, address string) error {
+func connectToGameServer(ctx context.Context, sess *gameSession, address string) error {
 	conn, err := net.Dial("tcp", address)
 	if err != nil {
 		return err
@@ -207,7 +207,7 @@ func connectToGameServer(ctx context.Context, sess *session, address string) err
 	}
 }
 
-func handlePktFromGameClient(sess *session, pkt string) error {
+func handlePktFromGameClient(sess *gameSession, pkt string) error {
 	id, ok := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
 	logger.Debugw("received packet from game client",
@@ -245,7 +245,7 @@ func handlePktFromGameClient(sess *session, pkt string) error {
 	return nil
 }
 
-func handlePktFromGameServer(sess *session, pkt string) error {
+func handlePktFromGameServer(sess *gameSession, pkt string) error {
 	id, ok := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
 	logger.Infow("received packet from game server",
@@ -314,7 +314,7 @@ func handlePktFromGameServer(sess *session, pkt string) error {
 	return nil
 }
 
-func sendMsgToGameClient(sess *session, msg d1proto.MsgSvr) error {
+func sendMsgToGameClient(sess *gameSession, msg d1proto.MsgSvr) error {
 	pkt, err := msg.Serialized()
 	if err != nil {
 		return err
@@ -323,7 +323,7 @@ func sendMsgToGameClient(sess *session, msg d1proto.MsgSvr) error {
 	return nil
 }
 
-func sendMsgToGameServer(sess *session, msg d1proto.MsgCli) error {
+func sendMsgToGameServer(sess *gameSession, msg d1proto.MsgCli) error {
 	pkt, err := msg.Serialized()
 	if err != nil {
 		return err
@@ -332,7 +332,7 @@ func sendMsgToGameServer(sess *session, msg d1proto.MsgCli) error {
 	return nil
 }
 
-func sendPktToGameClient(sess *session, pkt string) {
+func sendPktToGameClient(sess *gameSession, pkt string) {
 	id, _ := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
 	logger.Infow("sent packet to game client",
@@ -343,7 +343,7 @@ func sendPktToGameClient(sess *session, pkt string) {
 	fmt.Fprint(sess.clientConn, pkt+"\x00")
 }
 
-func sendPktToGameServer(sess *session, pkt string) {
+func sendPktToGameServer(sess *gameSession, pkt string) {
 	id, _ := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
 	logger.Infow("sent packet to game server",
