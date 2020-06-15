@@ -21,8 +21,13 @@ func (p *loginProxy) start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer ln.Close()
-	logger.Infow("started login proxy",
+	defer func() {
+		ln.Close()
+		logger.Infow("login proxy ended",
+			"address", ln.Addr().String(),
+		)
+	}()
+	logger.Infow("login proxy started",
 		"address", ln.Addr().String(),
 	)
 	p.ln = ln
