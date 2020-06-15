@@ -126,6 +126,9 @@ func (s *loginSession) handlePktFromClient(ctx context.Context, pkt string) erro
 		"message_name", name,
 		"packet", pkt,
 	)
+
+	s.sendPktToServer(pkt)
+
 	if ok {
 		extra := strings.TrimPrefix(pkt, string(id))
 		switch id {
@@ -136,18 +139,13 @@ func (s *loginSession) handlePktFromClient(ctx context.Context, pkt string) erro
 				return err
 			}
 
-			s.sendPktToServer(pkt)
-
 			select {
 			case s.serverIdCh <- msg.Id:
 			case <-ctx.Done():
 				return ctx.Err()
 			}
-			return nil
 		}
 	}
-
-	s.sendPktToServer(pkt)
 	return nil
 }
 
