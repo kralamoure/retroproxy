@@ -72,7 +72,12 @@ func (p *loginProxy) handleClientConn(ctx context.Context, conn net.Conn) error 
 	wg := sync.WaitGroup{}
 	defer wg.Wait()
 
-	defer conn.Close()
+	defer func() {
+		conn.Close()
+		logger.Infow("client disconnected",
+			"client_address", conn.RemoteAddr().String(),
+		)
+	}()
 	logger.Infow("new connection from login client",
 		"client_address", conn.RemoteAddr().String(),
 	)
