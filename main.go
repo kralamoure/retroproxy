@@ -21,7 +21,7 @@ func main() {
 
 var (
 	logger             *zap.SugaredLogger
-	developing         bool
+	debug              bool
 	loginServerAddress string
 	loginProxyPort     string
 	gameProxyPort      string
@@ -34,7 +34,7 @@ func run() int {
 
 	loadVars()
 
-	if developing {
+	if debug {
 		traceFile, err := os.Create("trace.out")
 		if err != nil {
 			log.Println(err)
@@ -124,7 +124,7 @@ func deleteOldTicketsLoop(ctx context.Context, maxDur time.Duration) {
 }
 
 func loadLogger() error {
-	if developing {
+	if debug {
 		tmp, err := zap.NewDevelopment()
 		if err != nil {
 			return err
@@ -141,7 +141,7 @@ func loadLogger() error {
 }
 
 func loadVars() {
-	flag.BoolVar(&developing, "d", false, "Enable development mode")
+	flag.BoolVar(&debug, "d", false, "Enable debug mode")
 	flag.StringVar(&loginServerAddress, "a", "34.251.172.139:443", "Dofus login server address")
 	flag.StringVar(&loginProxyPort, "lp", "5555", "Dofus login proxy port")
 	flag.StringVar(&gameProxyPort, "gp", "5556", "Dofus game proxy port")
