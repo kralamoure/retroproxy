@@ -121,7 +121,7 @@ func (s *loginSession) handlePktFromServer(ctx context.Context, pkt string) erro
 func (s *loginSession) handlePktFromClient(ctx context.Context, pkt string) error {
 	id, ok := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
-	logger.Debugw("received packet from login client",
+	logger.Infow("received packet from login client",
 		"client_address", s.clientConn.RemoteAddr().String(),
 		"message_name", name,
 		"packet", pkt,

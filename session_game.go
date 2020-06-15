@@ -125,7 +125,7 @@ func (s *gameSession) handlePktFromServer(ctx context.Context, pkt string) error
 func (s *gameSession) handlePktFromClient(ctx context.Context, pkt string) error {
 	id, ok := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
-	logger.Debugw("received packet from game client",
+	logger.Infow("received packet from game client",
 		"client_address", s.clientConn.RemoteAddr().String(),
 		"message_name", name,
 		"packet", pkt,
