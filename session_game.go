@@ -16,7 +16,6 @@ import (
 type gameSession struct {
 	clientConn net.Conn
 	serverConn net.Conn
-	// serverId   int
 
 	ticket   ticket
 	ticketCh chan ticket
