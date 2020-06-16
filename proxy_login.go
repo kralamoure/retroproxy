@@ -17,7 +17,7 @@ func (p *loginProxy) start(ctx context.Context) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
-	ln, err := net.Listen("tcp4", net.JoinHostPort("localhost", loginProxyPort))
+	ln, err := net.Listen("tcp4", net.JoinHostPort("127.0.0.1", loginProxyPort))
 	if err != nil {
 		return err
 	}

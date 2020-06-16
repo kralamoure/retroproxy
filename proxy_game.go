@@ -19,7 +19,7 @@ func (p *gameProxy) start(ctx context.Context) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
-	ln, err := net.Listen("tcp4", net.JoinHostPort("localhost", gameProxyPort))
+	ln, err := net.Listen("tcp4", net.JoinHostPort("127.0.0.1", gameProxyPort))
 	if err != nil {
 		return err
 	}

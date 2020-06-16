@@ -102,7 +102,7 @@ func (s *loginSession) handlePktFromServer(ctx context.Context, pkt string) erro
 			})
 
 			msgOut := &msgsvr.AccountSelectServerPlainSuccess{
-				Host:   "localhost",
+				Host:   "127.0.0.1",
 				Port:   gameProxyPort,
 				Ticket: id.String(),
 			}
