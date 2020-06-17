@@ -81,25 +81,18 @@ func run() int {
 
 	errCh := make(chan error)
 
-	loginAddr, err := net.ResolveTCPAddr("tcp4", net.JoinHostPort("127.0.0.1", loginProxyPort))
-	if err != nil {
-		zap.L().Error(err.Error())
-		return 1
-	}
-	loginLn, err := net.ListenTCP("tcp4", loginAddr)
-	if err != nil {
-		zap.L().Error(err.Error())
-		return 1
-	}
-	defer loginLn.Close()
-	loginPx, err := login.NewProxy(loginLn, loginServerAddr, net.JoinHostPort("127.0.0.1", gameProxyPort))
+	loginPx, err := login.NewProxy(
+		net.JoinHostPort("127.0.0.1", loginProxyPort),
+		loginServerAddr,
+		net.JoinHostPort("127.0.0.1", gameProxyPort),
+	)
 	if err != nil {
 		return 1
 	}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := loginPx.Serve(ctx)
+		err := loginPx.ListenAndServe(ctx)
 		if err != nil {
 			select {
 			case errCh <- fmt.Errorf("error while serving login proxy: %w", err):

@@ -10,15 +10,19 @@ import (
 )
 
 type Proxy struct {
-	ln         *net.TCPListener
+	addr       *net.TCPAddr
 	serverAddr *net.TCPAddr
 
 	gameHost string
 	gamePort string
 }
 
-func NewProxy(ln *net.TCPListener, serverAddr, gameAddr string) (*Proxy, error) {
-	tcpServerAddr, err := net.ResolveTCPAddr("tcp4", serverAddr)
+func NewProxy(addr, serverAddr, gameAddr string) (*Proxy, error) {
+	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+	tcpServerAddr, err := net.ResolveTCPAddr("tcp", serverAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -27,25 +31,31 @@ func NewProxy(ln *net.TCPListener, serverAddr, gameAddr string) (*Proxy, error) 
 		return nil, err
 	}
 	return &Proxy{
+		addr:       tcpAddr,
 		serverAddr: tcpServerAddr,
 		gameHost:   gameHost,
 		gamePort:   gamePort,
-		ln:         ln,
 	}, nil
 }
 
-func (p *Proxy) Serve(ctx context.Context) error {
+func (p *Proxy) ListenAndServe(ctx context.Context) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
-	defer p.ln.Close()
+
+	ln, err := net.ListenTCP("tcp", p.addr)
+	if err != nil {
+		return err
+	}
+	defer ln.Close()
+
 	errCh := make(chan error)
 	connCh := make(chan *net.TCPConn)
 	go func() {
 		zap.L().Info("login: serving",
-			zap.String("address", p.ln.Addr().String()),
+			zap.String("address", ln.Addr().String()),
 		)
 		for {
-			conn, err := p.ln.AcceptTCP()
+			conn, err := ln.AcceptTCP()
 			if err != nil {
 				select {
 				case errCh <- err:
