@@ -1,56 +1,54 @@
-package main
+package d1sniff
 
 import (
-	"sync"
 	"time"
+
+	"go.uber.org/zap"
 )
 
-type ticket struct {
-	host     string
-	port     string
-	original string
+type Ticket struct {
+	Host     string
+	Port     string
+	Original string
 
-	issuedAt time.Time
-	serverId int
+	IssuedAt time.Time
+	ServerId int
 }
 
-var (
-	tickets   = make(map[string]ticket)
-	ticketsMu sync.Mutex
-)
+var tickets = make(map[string]Ticket)
 
-func setTicket(id string, t ticket) {
-	ticketsMu.Lock()
-	defer ticketsMu.Unlock()
+func SetTicket(id string, t Ticket) {
+	mu.Lock()
+	defer mu.Unlock()
 	tickets[id] = t
-	logger.Debugw("ticket set",
-		"ticket_id", id,
+	zap.L().Debug("ticket set",
+		zap.String("ticket_id", id),
 	)
 }
 
-func useTicket(id string) (ticket, bool) {
-	ticketsMu.Lock()
-	defer ticketsMu.Unlock()
+func UseTicket(id string) (Ticket, bool) {
+	mu.Lock()
+	defer mu.Unlock()
 	t, ok := tickets[id]
 	if ok {
 		delete(tickets, id)
-		logger.Debugw("ticket used",
-			"ticket_id", id,
+		zap.L().Debug("ticket used",
+			zap.String("ticket_id", id),
 		)
 	}
 	return t, ok
 }
 
-func deleteOldTickets(maxDur time.Duration) {
-	ticketsMu.Lock()
-	defer ticketsMu.Unlock()
+func DeleteOldTickets(maxDur time.Duration) {
+	mu.Lock()
+	defer mu.Unlock()
 	now := time.Now()
 	for id := range tickets {
-		deadline := tickets[id].issuedAt.Add(maxDur)
+		deadline := tickets[id].IssuedAt.Add(maxDur)
 		if now.After(deadline) {
 			delete(tickets, id)
-			logger.Debugw("old ticket deleted",
-				"ticket_id", id,
+			zap.L().Debug("old ticket deleted",
+				zap.String("ticket_id", id),
 			)
 		}
 	}

@@ -7,28 +7,31 @@ import (
 	"io"
 	"net"
 	"sync"
+
+	"github.com/kralamoure/d1proto/msgsvr"
+	"go.uber.org/zap"
 )
 
-type loginProxy struct {
+type gameProxy struct {
 	ln net.Listener
 }
 
-func (p *loginProxy) start(ctx context.Context) error {
+func (p *gameProxy) start(ctx context.Context) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
-	ln, err := net.Listen("tcp4", net.JoinHostPort("127.0.0.1", loginProxyPort))
+	ln, err := net.Listen("tcp4", net.JoinHostPort("127.0.0.1", gameProxyPort))
 	if err != nil {
 		return err
 	}
 	defer func() {
 		ln.Close()
-		logger.Infow("login proxy listener closed",
-			"address", ln.Addr().String(),
+		zap.L().Info("game proxy listener closed",
+			zap.String("address", ln.Addr().String()),
 		)
 	}()
-	logger.Infow("login proxy listening",
-		"address", ln.Addr().String(),
+	zap.L().Info("game proxy listening",
+		zap.String("address", ln.Addr().String()),
 	)
 	p.ln = ln
 
@@ -39,7 +42,7 @@ func (p *loginProxy) start(ctx context.Context) error {
 		err := p.acceptClientConns(ctx)
 		if err != nil {
 			select {
-			case errCh <- fmt.Errorf("error while accepting login client connections: %w", err):
+			case errCh <- fmt.Errorf("error while accepting game client connections: %w", err):
 			case <-ctx.Done():
 			}
 		}
@@ -53,7 +56,7 @@ func (p *loginProxy) start(ctx context.Context) error {
 	}
 }
 
-func (p *loginProxy) acceptClientConns(ctx context.Context) error {
+func (p *gameProxy) acceptClientConns(ctx context.Context) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
@@ -67,52 +70,45 @@ func (p *loginProxy) acceptClientConns(ctx context.Context) error {
 			defer wg.Done()
 			err := p.handleClientConn(ctx, conn)
 			if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, io.EOF) {
-				logger.Debugf("error while handling login client connection: %s", err)
+				zap.L().Debug(fmt.Sprintf("error while handling game client connection: %s", err))
 			}
 		}()
 	}
 }
 
-func (p *loginProxy) handleClientConn(ctx context.Context, conn net.Conn) error {
+func (p *gameProxy) handleClientConn(ctx context.Context, conn net.Conn) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
 	defer func() {
 		conn.Close()
-		logger.Infow("login client disconnected",
-			"client_address", conn.RemoteAddr().String(),
+		zap.L().Info("game client disconnected",
+			zap.String("client_address", conn.RemoteAddr().String()),
 		)
 	}()
-	logger.Infow("login client connected",
-		"client_address", conn.RemoteAddr().String(),
+	zap.L().Info("game client connected",
+		zap.String("client_address", conn.RemoteAddr().String()),
 	)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	s := &loginSession{
+	s := &gameSession{
 		clientConn: conn,
-		serverIdCh: make(chan int),
+		ticketCh:   make(chan ticket),
 	}
 
-	serverConn, err := net.Dial("tcp4", loginServerAddress)
+	err := s.sendMsgToClient(&msgsvr.AksHelloGame{})
 	if err != nil {
 		return err
 	}
-	defer serverConn.Close()
-	logger.Infow("connected to login server",
-		"local_address", serverConn.LocalAddr().String(),
-		"server_address", serverConn.RemoteAddr().String(),
-		"client_address", conn.RemoteAddr().String(),
-	)
-	s.serverConn = serverConn
 
 	errCh := make(chan error)
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := s.receivePktsFromServer(ctx)
+		err := s.connectToServer(ctx)
 		if err != nil {
 			select {
 			case errCh <- err:

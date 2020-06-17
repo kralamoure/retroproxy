@@ -1,4 +1,4 @@
-package main
+package login
 
 import (
 	"bufio"
@@ -12,15 +12,19 @@ import (
 	"github.com/kralamoure/d1proto"
 	"github.com/kralamoure/d1proto/msgcli"
 	"github.com/kralamoure/d1proto/msgsvr"
+	"go.uber.org/zap"
+
+	"github.com/kralamoure/d1sniff"
 )
 
-type loginSession struct {
-	clientConn net.Conn
-	serverConn net.Conn
+type session struct {
+	proxy      *Proxy
+	clientConn *net.TCPConn
+	serverConn *net.TCPConn
 	serverIdCh chan int
 }
 
-func (s *loginSession) receivePktsFromServer(ctx context.Context) error {
+func (s *session) receivePktsFromServer(ctx context.Context) error {
 	rd := bufio.NewReader(s.serverConn)
 	for {
 		pkt, err := rd.ReadString('\x00')
@@ -38,7 +42,7 @@ func (s *loginSession) receivePktsFromServer(ctx context.Context) error {
 	}
 }
 
-func (s *loginSession) receivePktsFromClient(ctx context.Context) error {
+func (s *session) receivePktsFromClient(ctx context.Context) error {
 	rd := bufio.NewReader(s.clientConn)
 	for {
 		pkt, err := rd.ReadString('\x00')
@@ -56,14 +60,14 @@ func (s *loginSession) receivePktsFromClient(ctx context.Context) error {
 	}
 }
 
-func (s *loginSession) handlePktFromServer(ctx context.Context, pkt string) error {
+func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 	id, ok := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
-	logger.Infow("received packet from login server",
-		"server_address", s.serverConn.RemoteAddr().String(),
-		"client_address", s.clientConn.RemoteAddr().String(),
-		"message_name", name,
-		"packet", pkt,
+	zap.L().Info("login: received packet from server",
+		zap.String("server_address", s.serverConn.RemoteAddr().String()),
+		zap.String("client_address", s.clientConn.RemoteAddr().String()),
+		zap.String("message_name", name),
+		zap.String("packet", pkt),
 	)
 	if ok {
 		extra := strings.TrimPrefix(pkt, string(id))
@@ -93,17 +97,17 @@ func (s *loginSession) handlePktFromServer(ctx context.Context, pkt string) erro
 				return err
 			}
 
-			setTicket(id.String(), ticket{
-				host:     msg.Host,
-				port:     msg.Port,
-				original: msg.Ticket,
-				serverId: serverId,
-				issuedAt: time.Now(),
+			d1sniff.SetTicket(id.String(), d1sniff.Ticket{
+				Host:     msg.Host,
+				Port:     msg.Port,
+				Original: msg.Ticket,
+				ServerId: serverId,
+				IssuedAt: time.Now(),
 			})
 
 			msgOut := &msgsvr.AccountSelectServerPlainSuccess{
-				Host:   "127.0.0.1",
-				Port:   gameProxyPort,
+				Host:   s.proxy.gameHost,
+				Port:   s.proxy.gamePort,
 				Ticket: id.String(),
 			}
 			err = s.sendMsgToClient(msgOut)
@@ -118,13 +122,13 @@ func (s *loginSession) handlePktFromServer(ctx context.Context, pkt string) erro
 	return nil
 }
 
-func (s *loginSession) handlePktFromClient(ctx context.Context, pkt string) error {
+func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
 	id, ok := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
-	logger.Infow("received packet from login client",
-		"client_address", s.clientConn.RemoteAddr().String(),
-		"message_name", name,
-		"packet", pkt,
+	zap.L().Info("login: received packet from client",
+		zap.String("client_address", s.clientConn.RemoteAddr().String()),
+		zap.String("message_name", name),
+		zap.String("packet", pkt),
 	)
 
 	s.sendPktToServer(pkt)
@@ -149,7 +153,7 @@ func (s *loginSession) handlePktFromClient(ctx context.Context, pkt string) erro
 	return nil
 }
 
-func (s *loginSession) sendMsgToServer(msg d1proto.MsgCli) error {
+func (s *session) sendMsgToServer(msg d1proto.MsgCli) error {
 	pkt, err := msg.Serialized()
 	if err != nil {
 		return err
@@ -158,7 +162,7 @@ func (s *loginSession) sendMsgToServer(msg d1proto.MsgCli) error {
 	return nil
 }
 
-func (s *loginSession) sendMsgToClient(msg d1proto.MsgSvr) error {
+func (s *session) sendMsgToClient(msg d1proto.MsgSvr) error {
 	pkt, err := msg.Serialized()
 	if err != nil {
 		return err
@@ -167,24 +171,24 @@ func (s *loginSession) sendMsgToClient(msg d1proto.MsgSvr) error {
 	return nil
 }
 
-func (s *loginSession) sendPktToServer(pkt string) {
+func (s *session) sendPktToServer(pkt string) {
 	id, _ := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
-	logger.Infow("sent packet to login server",
-		"server_address", s.serverConn.RemoteAddr().String(),
-		"message_name", name,
-		"packet", pkt,
+	zap.L().Info("login: sent packet to server",
+		zap.String("server_address", s.serverConn.RemoteAddr().String()),
+		zap.String("message_name", name),
+		zap.String("packet", pkt),
 	)
 	fmt.Fprint(s.serverConn, pkt+"\n\x00")
 }
 
-func (s *loginSession) sendPktToClient(pkt string) {
+func (s *session) sendPktToClient(pkt string) {
 	id, _ := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
-	logger.Infow("sent packet to login client",
-		"client_address", s.clientConn.RemoteAddr().String(),
-		"message_name", name,
-		"packet", pkt,
+	zap.L().Info("login: sent packet to client",
+		zap.String("client_address", s.clientConn.RemoteAddr().String()),
+		zap.String("message_name", name),
+		zap.String("packet", pkt),
 	)
 	fmt.Fprint(s.clientConn, pkt+"\x00")
 }

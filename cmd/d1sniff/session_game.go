@@ -11,6 +11,7 @@ import (
 	"github.com/kralamoure/d1proto"
 	"github.com/kralamoure/d1proto/msgcli"
 	"github.com/kralamoure/d1proto/msgsvr"
+	"go.uber.org/zap"
 )
 
 type gameSession struct {
@@ -34,10 +35,10 @@ func (s *gameSession) connectToServer(ctx context.Context) error {
 			return err
 		}
 		defer conn.Close()
-		logger.Infow("connected to game server",
-			"local_address", conn.LocalAddr().String(),
-			"server_address", conn.RemoteAddr().String(),
-			"client_address", s.clientConn.RemoteAddr().String(),
+		zap.L().Info("connected to game server",
+			zap.String("local_address", conn.LocalAddr().String()),
+			zap.String("server_address", conn.RemoteAddr().String()),
+			zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		)
 		s.serverConn = conn
 
@@ -101,11 +102,11 @@ func (s *gameSession) receivePktsFromClient(ctx context.Context) error {
 func (s *gameSession) handlePktFromServer(ctx context.Context, pkt string) error {
 	id, ok := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
-	logger.Infow("received packet from game server",
-		"server_address", s.serverConn.RemoteAddr().String(),
-		"client_address", s.clientConn.RemoteAddr().String(),
-		"message_name", name,
-		"packet", pkt,
+	zap.L().Info("received packet from game server",
+		zap.String("server_address", s.serverConn.RemoteAddr().String()),
+		zap.String("client_address", s.clientConn.RemoteAddr().String()),
+		zap.String("message_name", name),
+		zap.String("packet", pkt),
 	)
 	if ok {
 		switch id {
@@ -124,10 +125,10 @@ func (s *gameSession) handlePktFromServer(ctx context.Context, pkt string) error
 func (s *gameSession) handlePktFromClient(ctx context.Context, pkt string) error {
 	id, ok := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
-	logger.Infow("received packet from game client",
-		"client_address", s.clientConn.RemoteAddr().String(),
-		"message_name", name,
-		"packet", pkt,
+	zap.L().Info("received packet from game client",
+		zap.String("client_address", s.clientConn.RemoteAddr().String()),
+		zap.String("message_name", name),
+		zap.String("packet", pkt),
 	)
 	if ok {
 		extra := strings.TrimPrefix(pkt, string(id))
@@ -181,10 +182,10 @@ func (s *gameSession) sendMsgToClient(msg d1proto.MsgSvr) error {
 func (s *gameSession) sendPktToServer(pkt string) {
 	id, _ := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
-	logger.Infow("sent packet to game server",
-		"server_address", s.serverConn.RemoteAddr().String(),
-		"message_name", name,
-		"packet", pkt,
+	zap.L().Info("sent packet to game server",
+		zap.String("server_address", s.serverConn.RemoteAddr().String()),
+		zap.String("message_name", name),
+		zap.String("packet", pkt),
 	)
 	fmt.Fprint(s.serverConn, pkt+"\n\x00")
 }
@@ -192,10 +193,10 @@ func (s *gameSession) sendPktToServer(pkt string) {
 func (s *gameSession) sendPktToClient(pkt string) {
 	id, _ := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
-	logger.Infow("sent packet to game client",
-		"client_address", s.clientConn.RemoteAddr().String(),
-		"message_name", name,
-		"packet", pkt,
+	zap.L().Info("sent packet to game client",
+		zap.String("client_address", s.clientConn.RemoteAddr().String()),
+		zap.String("message_name", name),
+		zap.String("packet", pkt),
 	)
 	fmt.Fprint(s.clientConn, pkt+"\x00")
 }

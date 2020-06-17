@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"runtime/trace"
@@ -13,6 +14,8 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+
+	"github.com/kralamoure/d1sniff/login"
 )
 
 func main() {
@@ -20,12 +23,11 @@ func main() {
 }
 
 var (
-	logger             *zap.SugaredLogger
-	debug              bool
-	loginServerAddress string
-	loginProxyPort     string
-	gameProxyPort      string
-	talkToEveryNPC     bool
+	debug           bool
+	loginServerAddr string
+	loginProxyPort  string
+	gameProxyPort   string
+	talkToEveryNPC  bool
 )
 
 func run() int {
@@ -49,11 +51,26 @@ func run() int {
 		defer trace.Stop()
 	}
 
-	if err := loadLogger(); err != nil {
-		log.Printf("could not load logger: %s", err)
-		return 1
+	var logger *zap.Logger
+	if debug {
+		tmp, err := zap.NewDevelopment()
+		if err != nil {
+			log.Println(err)
+			return 1
+		}
+		logger = tmp
+	} else {
+		tmp, err := zap.NewProduction()
+		if err != nil {
+			log.Println(err)
+			return 1
+		}
+		logger = tmp
 	}
-	defer logger.Sync()
+	undoLogger := zap.ReplaceGlobals(logger)
+	defer undoLogger()
+	defer zap.L().Sync()
+	defer zap.S().Sync()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -64,14 +81,28 @@ func run() int {
 
 	errCh := make(chan error)
 
+	loginAddr, err := net.ResolveTCPAddr("tcp4", net.JoinHostPort("127.0.0.1", loginProxyPort))
+	if err != nil {
+		zap.L().Error(err.Error())
+		return 1
+	}
+	loginLn, err := net.ListenTCP("tcp4", loginAddr)
+	if err != nil {
+		zap.L().Error(err.Error())
+		return 1
+	}
+	defer loginLn.Close()
+	loginPx, err := login.NewProxy(loginLn, loginServerAddr, net.JoinHostPort("127.0.0.1", gameProxyPort))
+	if err != nil {
+		return 1
+	}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		var proxy loginProxy
-		err := proxy.start(ctx)
+		err := loginPx.Serve(ctx)
 		if err != nil {
 			select {
-			case errCh <- fmt.Errorf("error while proxying login server: %w", err):
+			case errCh <- fmt.Errorf("error while serving login proxy: %w", err):
 			case <-ctx.Done():
 			}
 		}
@@ -84,7 +115,7 @@ func run() int {
 		err := proxy.start(ctx)
 		if err != nil {
 			select {
-			case errCh <- fmt.Errorf("error while proxying game server: %w", err):
+			case errCh <- fmt.Errorf("error while serving game proxy: %w", err):
 			case <-ctx.Done():
 			}
 		}
@@ -98,11 +129,11 @@ func run() int {
 
 	select {
 	case sig := <-sigCh:
-		logger.Infow("received signal",
-			"signal", sig.String(),
+		zap.L().Info("received signal",
+			zap.String("signal", sig.String()),
 		)
 	case err := <-errCh:
-		logger.Error(err)
+		zap.L().Error(err.Error())
 		return 1
 	case <-ctx.Done():
 	}
@@ -123,26 +154,9 @@ func deleteOldTicketsLoop(ctx context.Context, maxDur time.Duration) {
 	}
 }
 
-func loadLogger() error {
-	if debug {
-		tmp, err := zap.NewDevelopment()
-		if err != nil {
-			return err
-		}
-		logger = tmp.Sugar()
-	} else {
-		tmp, err := zap.NewProduction()
-		if err != nil {
-			return err
-		}
-		logger = tmp.Sugar()
-	}
-	return nil
-}
-
 func loadVars() {
 	flag.BoolVar(&debug, "d", false, "Enable debug mode")
-	flag.StringVar(&loginServerAddress, "a", "34.251.172.139:443", "Dofus login server address")
+	flag.StringVar(&loginServerAddr, "a", "34.251.172.139:443", "Dofus login server address")
 	flag.StringVar(&loginProxyPort, "lp", "5555", "Dofus login proxy port")
 	flag.StringVar(&gameProxyPort, "gp", "5556", "Dofus game proxy port")
 	flag.BoolVar(&talkToEveryNPC, "npc", true, "Automatically talk to every NPC")
