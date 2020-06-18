@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// Cache is an implementation of Repo for an in-memory cache.
 type Cache struct {
 	mu      sync.Mutex
 	tickets map[string]Ticket
