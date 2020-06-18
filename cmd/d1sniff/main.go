@@ -93,6 +93,7 @@ func run() int {
 		repo,
 	)
 	if err != nil {
+		zap.L().Error(err.Error())
 		return 1
 	}
 	wg.Add(1)
@@ -112,6 +113,7 @@ func run() int {
 		repo,
 	)
 	if err != nil {
+		zap.L().Error(err.Error())
 		return 1
 	}
 	wg.Add(1)
