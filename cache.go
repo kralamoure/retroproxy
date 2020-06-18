@@ -1,24 +1,22 @@
-package cache
+package d1sniff
 
 import (
 	"sync"
 	"time"
 
 	"go.uber.org/zap"
-
-	"github.com/kralamoure/d1sniff"
 )
 
-type Repo struct {
+type Cache struct {
 	mu      sync.Mutex
-	tickets map[string]d1sniff.Ticket
+	tickets map[string]Ticket
 }
 
-func (r *Repo) SetTicket(id string, t d1sniff.Ticket) {
+func (r *Cache) SetTicket(id string, t Ticket) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if r.tickets == nil {
-		r.tickets = make(map[string]d1sniff.Ticket)
+		r.tickets = make(map[string]Ticket)
 	}
 	r.tickets[id] = t
 	zap.L().Debug("ticket set",
@@ -26,7 +24,7 @@ func (r *Repo) SetTicket(id string, t d1sniff.Ticket) {
 	)
 }
 
-func (r *Repo) UseTicket(id string) (d1sniff.Ticket, bool) {
+func (r *Cache) UseTicket(id string) (Ticket, bool) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	t, ok := r.tickets[id]
@@ -39,7 +37,7 @@ func (r *Repo) UseTicket(id string) (d1sniff.Ticket, bool) {
 	return t, ok
 }
 
-func (r *Repo) DeleteOldTickets(maxDur time.Duration) {
+func (r *Cache) DeleteOldTickets(maxDur time.Duration) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	now := time.Now()
