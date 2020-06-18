@@ -147,7 +147,7 @@ func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
 				return err
 			}
 
-			t, ok := d1sniff.UseTicket(msg.Ticket)
+			t, ok := s.proxy.repo.UseTicket(msg.Ticket)
 			if !ok {
 				err := s.sendMsgToClient(&msgsvr.AccountTicketResponseError{})
 				if err != nil {

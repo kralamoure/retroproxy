@@ -9,18 +9,25 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+
+	"github.com/kralamoure/d1sniff"
 )
 
 type Proxy struct {
 	addr       *net.TCPAddr
 	serverAddr *net.TCPAddr
 	ln         *net.TCPListener
+	repo       *d1sniff.Repo
 
 	gameHost string
 	gamePort string
 }
 
-func NewProxy(addr, serverAddr, gameAddr string) (*Proxy, error) {
+func NewProxy(addr, serverAddr, gameAddr string, repo *d1sniff.Repo) (*Proxy, error) {
+	if repo == nil {
+		return nil, errors.New("repository is nil")
+	}
+
 	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -38,6 +45,7 @@ func NewProxy(addr, serverAddr, gameAddr string) (*Proxy, error) {
 		serverAddr: tcpServerAddr,
 		gameHost:   gameHost,
 		gamePort:   gamePort,
+		repo:       repo,
 	}, nil
 }
 

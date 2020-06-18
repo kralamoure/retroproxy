@@ -83,10 +83,13 @@ func run() int {
 
 	errCh := make(chan error)
 
+	repo := &d1sniff.Repo{}
+
 	loginPx, err := login.NewProxy(
 		net.JoinHostPort("127.0.0.1", loginProxyPort),
 		loginServerAddr,
 		net.JoinHostPort("127.0.0.1", gameProxyPort),
+		repo,
 	)
 	if err != nil {
 		return 1
@@ -103,7 +106,10 @@ func run() int {
 		}
 	}()
 
-	gamePx, err := game.NewProxy(net.JoinHostPort("127.0.0.1", gameProxyPort))
+	gamePx, err := game.NewProxy(
+		net.JoinHostPort("127.0.0.1", gameProxyPort),
+		repo,
+	)
 	if err != nil {
 		return 1
 	}
@@ -122,7 +128,7 @@ func run() int {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		deleteOldTicketsLoop(ctx, 10*time.Second)
+		repo.DeleteOldTicketsLoop(ctx, 10*time.Second)
 	}()
 
 	select {
@@ -136,20 +142,6 @@ func run() int {
 	case <-ctx.Done():
 	}
 	return 0
-}
-
-func deleteOldTicketsLoop(ctx context.Context, maxDur time.Duration) {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			d1sniff.DeleteOldTickets(maxDur)
-		case <-ctx.Done():
-			return
-		}
-	}
 }
 
 func loadVars() {

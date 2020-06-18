@@ -97,7 +97,7 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 				return err
 			}
 
-			d1sniff.SetTicket(id.String(), d1sniff.Ticket{
+			s.proxy.repo.SetTicket(id.String(), d1sniff.Ticket{
 				Host:     msg.Host,
 				Port:     msg.Port,
 				Original: msg.Ticket,
