@@ -88,7 +88,7 @@ func (p *Proxy) serve(ctx context.Context) error {
 			defer wg.Done()
 			err := p.handleClientConn(ctx, conn)
 			if err != nil {
-				zap.L().Debug("error while handling client connection",
+				zap.L().Debug("login: error while handling client connection",
 					zap.Error(err),
 					zap.String("client_address", conn.RemoteAddr().String()),
 				)
