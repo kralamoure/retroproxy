@@ -15,6 +15,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/kralamoure/d1sniff"
 	"github.com/kralamoure/d1sniff/game"
 	"github.com/kralamoure/d1sniff/login"
 )
@@ -144,7 +145,7 @@ func deleteOldTicketsLoop(ctx context.Context, maxDur time.Duration) {
 	for {
 		select {
 		case <-ticker.C:
-			deleteOldTickets(maxDur)
+			d1sniff.DeleteOldTickets(maxDur)
 		case <-ctx.Done():
 			return
 		}
