@@ -2,6 +2,8 @@ package login
 
 import (
 	"context"
+	"errors"
+	"io"
 	"net"
 	"sync"
 
@@ -87,7 +89,7 @@ func (p *Proxy) serve(ctx context.Context) error {
 		go func() {
 			defer wg.Done()
 			err := p.handleClientConn(ctx, conn)
-			if err != nil {
+			if err != nil && !errors.Is(err, io.EOF) {
 				zap.L().Debug("login: error while handling client connection",
 					zap.Error(err),
 					zap.String("client_address", conn.RemoteAddr().String()),
