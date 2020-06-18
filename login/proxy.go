@@ -63,9 +63,6 @@ func (p *Proxy) ListenAndServe(ctx context.Context) error {
 			case <-ctx.Done():
 			}
 		}
-		zap.L().Info("login: serving",
-			zap.String("address", ln.Addr().String()),
-		)
 	}()
 
 	select {
@@ -77,6 +74,9 @@ func (p *Proxy) ListenAndServe(ctx context.Context) error {
 }
 
 func (p *Proxy) serve(ctx context.Context) error {
+	zap.L().Info("login: serving",
+		zap.String("address", p.ln.Addr().String()),
+	)
 	var wg sync.WaitGroup
 	defer wg.Wait()
 	for {
