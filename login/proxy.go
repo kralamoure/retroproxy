@@ -74,6 +74,9 @@ func (p *Proxy) ListenAndServe(ctx context.Context) error {
 }
 
 func (p *Proxy) serve(ctx context.Context) error {
+	defer zap.L().Info("login: stopped serving",
+		zap.String("address", p.ln.Addr().String()),
+	)
 	zap.L().Info("login: serving",
 		zap.String("address", p.ln.Addr().String()),
 	)
