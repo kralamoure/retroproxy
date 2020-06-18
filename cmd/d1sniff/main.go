@@ -16,9 +16,9 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/kralamoure/d1sniff"
+	"github.com/kralamoure/d1sniff/cache"
 	"github.com/kralamoure/d1sniff/game"
 	"github.com/kralamoure/d1sniff/login"
-	"github.com/kralamoure/d1sniff/repo"
 )
 
 func main() {
@@ -84,7 +84,7 @@ func run() int {
 
 	errCh := make(chan error)
 
-	repo := &repo.Cache{}
+	repo := &cache.Repo{}
 
 	loginPx, err := login.NewProxy(
 		net.JoinHostPort("127.0.0.1", loginProxyPort),
