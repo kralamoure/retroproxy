@@ -18,6 +18,7 @@ import (
 	"github.com/kralamoure/d1sniff"
 	"github.com/kralamoure/d1sniff/game"
 	"github.com/kralamoure/d1sniff/login"
+	"github.com/kralamoure/d1sniff/repo"
 )
 
 func main() {
@@ -83,7 +84,7 @@ func run() int {
 
 	errCh := make(chan error)
 
-	repo := &d1sniff.Repo{}
+	repo := &repo.Cache{}
 
 	loginPx, err := login.NewProxy(
 		net.JoinHostPort("127.0.0.1", loginProxyPort),
@@ -128,7 +129,7 @@ func run() int {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		repo.DeleteOldTicketsLoop(ctx, 10*time.Second)
+		d1sniff.DeleteOldTicketsLoop(ctx, repo, 10*time.Second)
 	}()
 
 	select {

@@ -15,10 +15,10 @@ import (
 type Proxy struct {
 	addr *net.TCPAddr
 	ln   *net.TCPListener
-	repo *d1sniff.Repo
+	repo d1sniff.Repo
 }
 
-func NewProxy(addr string, repo *d1sniff.Repo) (*Proxy, error) {
+func NewProxy(addr string, repo d1sniff.Repo) (*Proxy, error) {
 	if repo == nil {
 		return nil, errors.New("repository is nil")
 	}
