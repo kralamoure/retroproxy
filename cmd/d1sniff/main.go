@@ -93,7 +93,7 @@ func run() int {
 		repo,
 	)
 	if err != nil {
-		zap.L().Error(err.Error())
+		zap.L().Error("could not make login proxy", zap.Error(err))
 		return 1
 	}
 	wg.Add(1)
@@ -113,7 +113,7 @@ func run() int {
 		repo,
 	)
 	if err != nil {
-		zap.L().Error(err.Error())
+		zap.L().Error("could not make game proxy", zap.Error(err))
 		return 1
 	}
 	wg.Add(1)
