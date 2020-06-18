@@ -3,18 +3,70 @@ package game
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"strings"
 
 	"github.com/kralamoure/d1proto"
+	"github.com/kralamoure/d1proto/msgcli"
+	"github.com/kralamoure/d1proto/msgsvr"
 	"go.uber.org/zap"
+
+	"github.com/kralamoure/d1sniff"
 )
 
 type session struct {
 	proxy      *Proxy
 	clientConn *net.TCPConn
 	serverConn *net.TCPConn
+
+	ticket   d1sniff.Ticket
+	ticketCh chan d1sniff.Ticket
+}
+
+func (s *session) connectToServer(ctx context.Context) error {
+	errCh := make(chan error)
+
+	select {
+	case t := <-s.ticketCh:
+		s.ticket = t
+
+		addr, err := net.ResolveTCPAddr("tcp", net.JoinHostPort(t.Host, t.Port))
+		if err != nil {
+			return err
+		}
+		conn, err := net.DialTCP("tcp", nil, addr)
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
+		zap.L().Info("connected to game server",
+			zap.String("local_address", conn.LocalAddr().String()),
+			zap.String("server_address", conn.RemoteAddr().String()),
+			zap.String("client_address", s.clientConn.RemoteAddr().String()),
+		)
+		s.serverConn = conn
+
+		go func() {
+			err = s.receivePktsFromServer(ctx)
+			if err != nil {
+				select {
+				case errCh <- err:
+				case <-ctx.Done():
+				}
+			}
+		}()
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+
+	select {
+	case err := <-errCh:
+		return err
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 func (s *session) receivePktsFromServer(ctx context.Context) error {
@@ -54,7 +106,7 @@ func (s *session) receivePktsFromClient(ctx context.Context) error {
 }
 
 func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
-	id, _ := d1proto.MsgSvrIdByPkt(pkt)
+	id, ok := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
 	zap.L().Info("game: received packet from server",
 		zap.String("server_address", s.serverConn.RemoteAddr().String()),
@@ -62,20 +114,55 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 		zap.String("message_name", name),
 		zap.String("packet", pkt),
 	)
-
+	if ok {
+		switch id {
+		case d1proto.AksHelloGame:
+			err := s.sendMsgToServer(&msgcli.AccountSendTicket{Ticket: s.ticket.Original})
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+	}
 	s.sendPktToClient(pkt)
 	return nil
 }
 
 func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
-	id, _ := d1proto.MsgCliIdByPkt(pkt)
+	id, ok := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
 	zap.L().Info("game: received packet from client",
 		zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		zap.String("message_name", name),
 		zap.String("packet", pkt),
 	)
+	if ok {
+		extra := strings.TrimPrefix(pkt, string(id))
+		switch id {
+		case d1proto.AccountSendTicket:
+			msg := &msgcli.AccountSendTicket{}
+			err := msg.Deserialize(extra)
+			if err != nil {
+				return err
+			}
 
+			t, ok := d1sniff.UseTicket(msg.Ticket)
+			if !ok {
+				err := s.sendMsgToClient(&msgsvr.AccountTicketResponseError{})
+				if err != nil {
+					return err
+				}
+				return errors.New("ticket not found")
+			}
+
+			select {
+			case s.ticketCh <- t:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+			return nil
+		}
+	}
 	s.sendPktToServer(pkt)
 	return nil
 }
