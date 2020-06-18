@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -119,20 +120,24 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	serverConn, err := net.DialTCP("tcp", nil, p.serverAddr)
+	serverConn, err := net.DialTimeout("tcp", p.serverAddr.String(), 3*time.Second)
 	if err != nil {
 		return err
 	}
 	defer serverConn.Close()
+	tcpServerConn, ok := serverConn.(*net.TCPConn)
+	if !ok {
+		return errors.New("could not cast server connection as a tcp connection")
+	}
 	zap.L().Info("login: connected to server",
 		zap.String("client_address", conn.RemoteAddr().String()),
-		zap.String("server_address", serverConn.RemoteAddr().String()),
+		zap.String("server_address", tcpServerConn.RemoteAddr().String()),
 	)
 
 	s := session{
 		proxy:      p,
 		clientConn: conn,
-		serverConn: serverConn,
+		serverConn: tcpServerConn,
 		serverIdCh: make(chan int),
 	}
 

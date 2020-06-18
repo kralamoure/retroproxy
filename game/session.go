@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/kralamoure/d1proto"
 	"github.com/kralamoure/d1proto/msgcli"
@@ -32,21 +33,21 @@ func (s *session) connectToServer(ctx context.Context) error {
 	case t := <-s.ticketCh:
 		s.ticket = t
 
-		addr, err := net.ResolveTCPAddr("tcp", net.JoinHostPort(t.Host, t.Port))
-		if err != nil {
-			return err
-		}
-		conn, err := net.DialTCP("tcp", nil, addr)
+		conn, err := net.DialTimeout("tcp", net.JoinHostPort(t.Host, t.Port), 3*time.Second)
 		if err != nil {
 			return err
 		}
 		defer conn.Close()
+		tcpConn, ok := conn.(*net.TCPConn)
+		if !ok {
+			return errors.New("could not cast server connection as a tcp connection")
+		}
 		zap.L().Info("connected to game server",
-			zap.String("local_address", conn.LocalAddr().String()),
-			zap.String("server_address", conn.RemoteAddr().String()),
+			zap.String("local_address", tcpConn.LocalAddr().String()),
+			zap.String("server_address", tcpConn.RemoteAddr().String()),
 			zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		)
-		s.serverConn = conn
+		s.serverConn = tcpConn
 
 		go func() {
 			err = s.receivePktsFromServer(ctx)
