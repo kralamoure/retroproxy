@@ -15,6 +15,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/kralamoure/d1sniff/game"
 	"github.com/kralamoure/d1sniff/login"
 )
 
@@ -101,11 +102,14 @@ func run() int {
 		}
 	}()
 
+	gamePx, err := game.NewProxy(net.JoinHostPort("127.0.0.1", gameProxyPort))
+	if err != nil {
+		return 1
+	}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		var proxy gameProxy
-		err := proxy.start(ctx)
+		err := gamePx.ListenAndServe(ctx)
 		if err != nil {
 			select {
 			case errCh <- fmt.Errorf("error while serving game proxy: %w", err):
