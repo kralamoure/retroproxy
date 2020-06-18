@@ -2,7 +2,6 @@ package login
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"sync"
 
@@ -12,6 +11,7 @@ import (
 type Proxy struct {
 	addr       *net.TCPAddr
 	serverAddr *net.TCPAddr
+	ln         *net.TCPListener
 
 	gameHost string
 	gamePort string
@@ -47,42 +47,53 @@ func (p *Proxy) ListenAndServe(ctx context.Context) error {
 		return err
 	}
 	defer ln.Close()
+	p.ln = ln
 
 	errCh := make(chan error)
-	connCh := make(chan *net.TCPConn)
+
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
+		err := p.serve(ctx)
+		if err != nil {
+			select {
+			case errCh <- err:
+			case <-ctx.Done():
+			}
+		}
 		zap.L().Info("login: serving",
 			zap.String("address", ln.Addr().String()),
 		)
-		for {
-			conn, err := ln.AcceptTCP()
-			if err != nil {
-				select {
-				case errCh <- err:
-				case <-ctx.Done():
-				}
-			}
-			connCh <- conn
-		}
 	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-errCh:
+		return err
+	}
+}
+
+func (p *Proxy) serve(ctx context.Context) error {
+	var wg sync.WaitGroup
+	defer wg.Wait()
 	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case err := <-errCh:
+		conn, err := p.ln.AcceptTCP()
+		if err != nil {
 			return err
-		case conn := <-connCh:
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				err := p.handleClientConn(ctx, conn)
-				if err != nil {
-					zap.L().Debug(fmt.Sprintf("login: error while handling client connection: %s", err),
-						zap.String("client_address", conn.RemoteAddr().String()),
-					)
-				}
-			}()
 		}
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := p.handleClientConn(ctx, conn)
+			if err != nil {
+				zap.L().Debug("error while handling client connection",
+					zap.Error(err),
+					zap.String("client_address", conn.RemoteAddr().String()),
+				)
+			}
+		}()
 	}
 }
 
@@ -103,7 +114,7 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	serverConn, err := net.DialTCP("tcp4", nil, p.serverAddr)
+	serverConn, err := net.DialTCP("tcp", nil, p.serverAddr)
 	if err != nil {
 		return err
 	}
