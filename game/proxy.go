@@ -132,7 +132,7 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 		zap.String("client_address", conn.RemoteAddr().String()),
 	)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	errCh := make(chan error)

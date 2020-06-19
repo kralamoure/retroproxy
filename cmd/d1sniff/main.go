@@ -33,9 +33,6 @@ var (
 )
 
 func run() int {
-	var wg sync.WaitGroup
-	defer wg.Wait()
-
 	loadVars()
 
 	if debug {
@@ -73,6 +70,9 @@ func run() int {
 	defer undoLogger()
 	defer zap.L().Sync()
 	defer zap.S().Sync()
+
+	var wg sync.WaitGroup
+	defer wg.Wait()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
