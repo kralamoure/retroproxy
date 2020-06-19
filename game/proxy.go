@@ -140,18 +140,6 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := s.receivePktsFromServer(ctx)
-		if err != nil {
-			select {
-			case errCh <- err:
-			case <-ctx.Done():
-			}
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
 		err := s.receivePktsFromClient(ctx)
 		if err != nil {
 			select {
