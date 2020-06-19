@@ -117,6 +117,7 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 	s := &session{
 		proxy:      p,
 		clientConn: conn,
+		ticketCh:   make(chan d1sniff.Ticket),
 	}
 
 	defer p.trackSession(s, false)
@@ -136,6 +137,18 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 	defer cancel()
 
 	errCh := make(chan error)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := s.connectToServer(ctx)
+		if err != nil {
+			select {
+			case errCh <- err:
+			case <-ctx.Done():
+			}
+		}
+	}()
 
 	wg.Add(1)
 	go func() {
