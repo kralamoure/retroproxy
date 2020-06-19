@@ -78,7 +78,7 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 			case <-ctx.Done():
 				return ctx.Err()
 			}
-		case d1proto.AccountSelectServerSuccess:
+		case d1proto.AccountSelectServerSuccess, d1proto.AccountSelectServerPlainSuccess:
 			var serverId int
 			select {
 			case serverId = <-s.serverIdCh:
@@ -86,10 +86,28 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 				return ctx.Err()
 			}
 
-			msg := &msgsvr.AccountSelectServerSuccess{}
-			err := msg.Deserialize(extra)
-			if err != nil {
-				return err
+			t := d1sniff.Ticket{ServerId: serverId}
+
+			if id == d1proto.AccountSelectServerSuccess {
+				msg := &msgsvr.AccountSelectServerSuccess{}
+				err := msg.Deserialize(extra)
+				if err != nil {
+					return err
+				}
+
+				t.Host = msg.Host
+				t.Port = msg.Port
+				t.Original = msg.Ticket
+			} else {
+				msg := &msgsvr.AccountSelectServerPlainSuccess{}
+				err := msg.Deserialize(extra)
+				if err != nil {
+					return err
+				}
+
+				t.Host = msg.Host
+				t.Port = msg.Port
+				t.Original = msg.Ticket
 			}
 
 			id, err := uuid.NewV4()
@@ -97,13 +115,8 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 				return err
 			}
 
-			s.proxy.repo.SetTicket(id.String(), d1sniff.Ticket{
-				Host:     msg.Host,
-				Port:     msg.Port,
-				Original: msg.Ticket,
-				ServerId: serverId,
-				IssuedAt: time.Now(),
-			})
+			t.IssuedAt = time.Now()
+			s.proxy.repo.SetTicket(id.String(), t)
 
 			msgOut := &msgsvr.AccountSelectServerPlainSuccess{
 				Host:   s.proxy.gameHost,
