@@ -69,7 +69,6 @@ func run() int {
 	undoLogger := zap.ReplaceGlobals(logger)
 	defer undoLogger()
 	defer zap.L().Sync()
-	defer zap.S().Sync()
 
 	var wg sync.WaitGroup
 	defer wg.Wait()
