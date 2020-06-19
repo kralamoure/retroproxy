@@ -7,6 +7,7 @@ import (
 	"net"
 	"sync"
 
+	"github.com/kralamoure/d1proto/msgsvr"
 	"go.uber.org/zap"
 
 	"github.com/kralamoure/d1sniff"
@@ -161,6 +162,8 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 			}
 		}
 	}()
+
+	s.sendMsgToClient(&msgsvr.AksHelloGame{})
 
 	select {
 	case err := <-errCh:
