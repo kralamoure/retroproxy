@@ -40,7 +40,7 @@ func (s *session) connectToServer(ctx context.Context) error {
 		defer conn.Close()
 		tcpConn, ok := conn.(*net.TCPConn)
 		if !ok {
-			return errors.New("could not cast server connection as a tcp connection")
+			return errors.New("could not assert server connection as a tcp connection")
 		}
 		zap.L().Info("connected to game server",
 			zap.String("local_address", tcpConn.LocalAddr().String()),

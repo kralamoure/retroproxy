@@ -53,9 +53,6 @@ func NewProxy(addr, serverAddr, gameAddr string, repo d1sniff.Repo) (*Proxy, err
 }
 
 func (p *Proxy) ListenAndServe(ctx context.Context) error {
-	var wg sync.WaitGroup
-	defer wg.Wait()
-
 	ln, err := net.ListenTCP("tcp", p.addr)
 	if err != nil {
 		return err
@@ -159,7 +156,7 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 	defer serverConn.Close()
 	tcpServerConn, ok := serverConn.(*net.TCPConn)
 	if !ok {
-		return errors.New("could not cast server connection as a tcp connection")
+		return errors.New("could not assert server connection as a tcp connection")
 	}
 	zap.L().Info("login: connected to server",
 		zap.String("client_address", conn.RemoteAddr().String()),
