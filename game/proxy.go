@@ -116,9 +116,11 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 	)
 
 	s := &session{
-		proxy:      p,
-		clientConn: conn,
-		ticketCh:   make(chan d1sniff.Ticket),
+		proxy:               p,
+		clientConn:          conn,
+		ticketCh:            make(chan d1sniff.Ticket),
+		connectedToServerCh: make(chan struct{}),
+		firstPkt:            true,
 	}
 
 	p.trackSession(s, true)

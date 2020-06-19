@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/kralamoure/d1proto"
@@ -22,11 +23,17 @@ type session struct {
 	clientConn *net.TCPConn
 	serverConn *net.TCPConn
 
-	ticket   d1sniff.Ticket
-	ticketCh chan d1sniff.Ticket
+	ticket              d1sniff.Ticket
+	ticketCh            chan d1sniff.Ticket
+	connectedToServerCh chan struct{}
+
+	firstPkt bool
 }
 
 func (s *session) connectToServer(ctx context.Context) error {
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
 	errCh := make(chan error)
 
 	select {
@@ -48,8 +55,11 @@ func (s *session) connectToServer(ctx context.Context) error {
 			zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		)
 		s.serverConn = tcpConn
+		close(s.connectedToServerCh)
 
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			err = s.receivePktsFromServer(ctx)
 			if err != nil {
 				select {
@@ -100,6 +110,7 @@ func (s *session) receivePktsFromClient(ctx context.Context) error {
 			continue
 		}
 		err = s.handlePktFromClient(ctx, pkt)
+		s.firstPkt = false
 		if err != nil {
 			return err
 		}
@@ -137,10 +148,16 @@ func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
 		zap.String("message_name", name),
 		zap.String("packet", pkt),
 	)
+	if s.firstPkt && !ok {
+		return errors.New("invalid first packet")
+	}
 	if ok {
 		extra := strings.TrimPrefix(pkt, string(id))
 		switch id {
 		case d1proto.AccountSendTicket:
+			if !s.firstPkt {
+				return errors.New("unexpected packet")
+			}
 			msg := &msgcli.AccountSendTicket{}
 			err := msg.Deserialize(extra)
 			if err != nil {
@@ -163,6 +180,11 @@ func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
 			}
 			return nil
 		}
+	}
+	select {
+	case <-s.connectedToServerCh:
+	case <-ctx.Done():
+		return ctx.Err()
 	}
 	s.sendPktToServer(pkt)
 	return nil
