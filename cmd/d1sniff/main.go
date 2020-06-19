@@ -81,14 +81,14 @@ func run() int {
 
 	errCh := make(chan error)
 
-	repo := &d1sniff.Cache{}
+	repo := d1sniff.NewCache(logger.Named("cache"))
 
 	loginPx, err := login.NewProxy(
 		net.JoinHostPort("127.0.0.1", loginProxyPort),
 		loginServerAddr,
 		net.JoinHostPort("127.0.0.1", gameProxyPort),
 		repo,
-		logger,
+		logger.Named("login"),
 	)
 	if err != nil {
 		logger.Error("could not make login proxy", zap.Error(err))
@@ -109,7 +109,7 @@ func run() int {
 	gamePx, err := game.NewProxy(
 		net.JoinHostPort("127.0.0.1", gameProxyPort),
 		repo,
-		logger,
+		logger.Named("game"),
 	)
 	if err != nil {
 		logger.Error("could not make game proxy", zap.Error(err))

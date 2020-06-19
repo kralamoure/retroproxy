@@ -9,8 +9,16 @@ import (
 
 // Cache is an implementation of Repo for an in-memory cache.
 type Cache struct {
-	mu      sync.Mutex
+	logger  *zap.Logger
 	tickets map[string]Ticket
+	mu      sync.Mutex
+}
+
+func NewCache(logger *zap.Logger) *Cache {
+	if logger == nil {
+		logger = zap.NewNop()
+	}
+	return &Cache{logger: logger}
 }
 
 func (r *Cache) SetTicket(id string, t Ticket) {
@@ -20,7 +28,7 @@ func (r *Cache) SetTicket(id string, t Ticket) {
 		r.tickets = make(map[string]Ticket)
 	}
 	r.tickets[id] = t
-	zap.L().Debug("ticket set",
+	r.logger.Debug("ticket set",
 		zap.String("ticket_id", id),
 	)
 }
@@ -31,7 +39,7 @@ func (r *Cache) UseTicket(id string) (Ticket, bool) {
 	t, ok := r.tickets[id]
 	if ok {
 		delete(r.tickets, id)
-		zap.L().Debug("ticket used",
+		r.logger.Debug("ticket used",
 			zap.String("ticket_id", id),
 		)
 	}
@@ -46,7 +54,7 @@ func (r *Cache) DeleteOldTickets(maxDur time.Duration) {
 		deadline := r.tickets[id].IssuedAt.Add(maxDur)
 		if now.After(deadline) {
 			delete(r.tickets, id)
-			zap.L().Debug("old ticket deleted",
+			r.logger.Debug("old ticket deleted",
 				zap.String("ticket_id", id),
 			)
 		}
