@@ -53,32 +53,25 @@ func NewProxy(addr, serverAddr, gameAddr string, repo d1sniff.Repo) (*Proxy, err
 }
 
 func (p *Proxy) ListenAndServe(ctx context.Context) error {
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
 	ln, err := net.ListenTCP("tcp", p.addr)
 	if err != nil {
 		return err
 	}
-
-	return p.serve(ctx, ln)
-}
-
-func (p *Proxy) serve(ctx context.Context, ln *net.TCPListener) error {
-	var wg sync.WaitGroup
-	defer wg.Wait()
-
 	defer func() {
 		ln.Close()
-		zap.L().Info("login: stopped serving",
+		zap.L().Info("login: stopped listening",
 			zap.String("address", ln.Addr().String()),
 		)
 	}()
-	zap.L().Info("login: serving",
+	zap.L().Info("login: listening",
 		zap.String("address", ln.Addr().String()),
 	)
-
 	p.ln = ln
 
 	errCh := make(chan error)
-
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -127,15 +120,6 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
-	s := &session{
-		proxy:      p,
-		clientConn: conn,
-		serverIdCh: make(chan int),
-	}
-
-	defer p.trackSession(s, false)
-	p.trackSession(s, true)
-
 	defer func() {
 		conn.Close()
 		zap.L().Info("login: client disconnected",
@@ -146,8 +130,14 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 		zap.String("client_address", conn.RemoteAddr().String()),
 	)
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	s := &session{
+		proxy:      p,
+		clientConn: conn,
+		serverIdCh: make(chan int),
+	}
+
+	p.trackSession(s, true)
+	defer p.trackSession(s, false)
 
 	serverConn, err := net.DialTimeout("tcp", p.serverAddr.String(), 3*time.Second)
 	if err != nil {
@@ -163,6 +153,9 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 		zap.String("server_address", tcpServerConn.RemoteAddr().String()),
 	)
 	s.serverConn = tcpServerConn
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	errCh := make(chan error)
 

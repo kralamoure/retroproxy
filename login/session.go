@@ -127,6 +127,7 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 			if err != nil {
 				return err
 			}
+			s.clientConn.Close()
 			return nil
 		}
 	}
