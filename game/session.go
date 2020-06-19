@@ -49,7 +49,7 @@ func (s *session) connectToServer(ctx context.Context) error {
 		if !ok {
 			return errors.New("could not assert server connection as a tcp connection")
 		}
-		zap.L().Info("connected to game server",
+		zap.L().Info("game: connected to server",
 			zap.String("local_address", tcpConn.LocalAddr().String()),
 			zap.String("server_address", tcpConn.RemoteAddr().String()),
 			zap.String("client_address", s.clientConn.RemoteAddr().String()),
