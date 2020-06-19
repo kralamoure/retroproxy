@@ -106,7 +106,7 @@ func (p *Proxy) acceptLoop(ctx context.Context) error {
 		go func() {
 			defer wg.Done()
 			err := p.handleClientConn(ctx, conn)
-			if err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, context.Canceled) {
+			if err != nil && !(errors.Is(err, io.EOF) || errors.Is(err, context.Canceled) || errors.Is(err, errEndOfService)) {
 				zap.L().Debug("login: error while handling client connection",
 					zap.Error(err),
 					zap.String("client_address", conn.RemoteAddr().String()),

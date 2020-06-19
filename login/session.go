@@ -3,6 +3,7 @@ package login
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -23,6 +24,8 @@ type session struct {
 	serverConn *net.TCPConn
 	serverIdCh chan int
 }
+
+var errEndOfService = errors.New("end of service")
 
 func (s *session) receivePktsFromServer(ctx context.Context) error {
 	rd := bufio.NewReader(s.serverConn)
@@ -127,8 +130,7 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 			if err != nil {
 				return err
 			}
-			s.clientConn.Close()
-			return nil
+			return errEndOfService
 		}
 	}
 
