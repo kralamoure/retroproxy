@@ -14,17 +14,21 @@ import (
 )
 
 type Proxy struct {
-	addr *net.TCPAddr
-	repo d1sniff.Repo
+	logger *zap.Logger
+	addr   *net.TCPAddr
+	repo   d1sniff.Repo
 
 	ln       *net.TCPListener
 	sessions map[*session]struct{}
 	mu       sync.Mutex
 }
 
-func NewProxy(addr string, repo d1sniff.Repo) (*Proxy, error) {
+func NewProxy(addr string, repo d1sniff.Repo, logger *zap.Logger) (*Proxy, error) {
 	if repo == nil {
 		return nil, errors.New("repository is nil")
+	}
+	if logger == nil {
+		logger = zap.NewNop()
 	}
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
@@ -32,8 +36,9 @@ func NewProxy(addr string, repo d1sniff.Repo) (*Proxy, error) {
 		return nil, err
 	}
 	return &Proxy{
-		addr: tcpAddr,
-		repo: repo,
+		logger: logger,
+		addr:   tcpAddr,
+		repo:   repo,
 	}, nil
 }
 
@@ -47,11 +52,11 @@ func (p *Proxy) ListenAndServe(ctx context.Context) error {
 	}
 	defer func() {
 		ln.Close()
-		zap.L().Info("stopped listening",
+		p.logger.Info("stopped listening",
 			zap.String("address", ln.Addr().String()),
 		)
 	}()
-	zap.L().Info("listening",
+	p.logger.Info("listening",
 		zap.String("address", ln.Addr().String()),
 	)
 	p.ln = ln
@@ -92,7 +97,7 @@ func (p *Proxy) acceptLoop(ctx context.Context) error {
 			defer wg.Done()
 			err := p.handleClientConn(ctx, conn)
 			if err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, context.Canceled) {
-				zap.L().Debug("error while handling client connection",
+				p.logger.Debug("error while handling client connection",
 					zap.Error(err),
 					zap.String("client_address", conn.RemoteAddr().String()),
 				)
@@ -107,11 +112,11 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 
 	defer func() {
 		conn.Close()
-		zap.L().Info("client disconnected",
+		p.logger.Info("client disconnected",
 			zap.String("client_address", conn.RemoteAddr().String()),
 		)
 	}()
-	zap.L().Info("client connected",
+	p.logger.Info("client connected",
 		zap.String("client_address", conn.RemoteAddr().String()),
 	)
 

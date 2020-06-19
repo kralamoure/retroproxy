@@ -32,6 +32,8 @@ var (
 	talkToEveryNPC  bool
 )
 
+var logger *zap.Logger
+
 func run() int {
 	loadVars()
 
@@ -50,7 +52,6 @@ func run() int {
 		defer trace.Stop()
 	}
 
-	var logger *zap.Logger
 	if debug {
 		tmp, err := zap.NewDevelopment()
 		if err != nil {
@@ -66,9 +67,7 @@ func run() int {
 		}
 		logger = tmp
 	}
-	undoLogger := zap.ReplaceGlobals(logger)
-	defer undoLogger()
-	defer zap.L().Sync()
+	defer logger.Sync()
 
 	var wg sync.WaitGroup
 	defer wg.Wait()
@@ -89,9 +88,10 @@ func run() int {
 		loginServerAddr,
 		net.JoinHostPort("127.0.0.1", gameProxyPort),
 		repo,
+		logger,
 	)
 	if err != nil {
-		zap.L().Error("could not make login proxy", zap.Error(err))
+		logger.Error("could not make login proxy", zap.Error(err))
 		return 1
 	}
 	wg.Add(1)
@@ -109,9 +109,10 @@ func run() int {
 	gamePx, err := game.NewProxy(
 		net.JoinHostPort("127.0.0.1", gameProxyPort),
 		repo,
+		logger,
 	)
 	if err != nil {
-		zap.L().Error("could not make game proxy", zap.Error(err))
+		logger.Error("could not make game proxy", zap.Error(err))
 		return 1
 	}
 	wg.Add(1)
@@ -134,11 +135,11 @@ func run() int {
 
 	select {
 	case sig := <-sigCh:
-		zap.L().Info("received signal",
+		logger.Info("received signal",
 			zap.String("signal", sig.String()),
 		)
 	case err := <-errCh:
-		zap.L().Error(err.Error())
+		logger.Error(err.Error())
 		return 1
 	case <-ctx.Done():
 	}

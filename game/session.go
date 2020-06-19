@@ -49,7 +49,7 @@ func (s *session) connectToServer(ctx context.Context) error {
 		if !ok {
 			return errors.New("could not assert server connection as a tcp connection")
 		}
-		zap.L().Info("connected to server",
+		s.proxy.logger.Info("connected to server",
 			zap.String("server_address", tcpConn.RemoteAddr().String()),
 			zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		)
@@ -119,7 +119,7 @@ func (s *session) receivePktsFromClient(ctx context.Context) error {
 func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 	id, ok := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
-	zap.L().Info("received packet from server",
+	s.proxy.logger.Info("received packet from server",
 		zap.String("server_address", s.serverConn.RemoteAddr().String()),
 		zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		zap.String("message_name", name),
@@ -142,7 +142,7 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
 	id, ok := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
-	zap.L().Info("received packet from client",
+	s.proxy.logger.Info("received packet from client",
 		zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		zap.String("message_name", name),
 		zap.String("packet", pkt),
@@ -210,7 +210,7 @@ func (s *session) sendMsgToClient(msg d1proto.MsgSvr) error {
 func (s *session) sendPktToServer(pkt string) {
 	id, _ := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
-	zap.L().Info("sent packet to server",
+	s.proxy.logger.Info("sent packet to server",
 		zap.String("server_address", s.serverConn.RemoteAddr().String()),
 		zap.String("message_name", name),
 		zap.String("packet", pkt),
@@ -221,7 +221,7 @@ func (s *session) sendPktToServer(pkt string) {
 func (s *session) sendPktToClient(pkt string) {
 	id, _ := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
-	zap.L().Info("sent packet to client",
+	s.proxy.logger.Info("sent packet to client",
 		zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		zap.String("message_name", name),
 		zap.String("packet", pkt),
