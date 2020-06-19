@@ -47,11 +47,11 @@ func (p *Proxy) ListenAndServe(ctx context.Context) error {
 	}
 	defer func() {
 		ln.Close()
-		zap.L().Info("game: stopped listening",
+		zap.L().Info("stopped listening",
 			zap.String("address", ln.Addr().String()),
 		)
 	}()
-	zap.L().Info("game: listening",
+	zap.L().Info("listening",
 		zap.String("address", ln.Addr().String()),
 	)
 	p.ln = ln
@@ -92,7 +92,7 @@ func (p *Proxy) acceptLoop(ctx context.Context) error {
 			defer wg.Done()
 			err := p.handleClientConn(ctx, conn)
 			if err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, context.Canceled) {
-				zap.L().Debug("game: error while handling client connection",
+				zap.L().Debug("error while handling client connection",
 					zap.Error(err),
 					zap.String("client_address", conn.RemoteAddr().String()),
 				)
@@ -107,11 +107,11 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 
 	defer func() {
 		conn.Close()
-		zap.L().Info("game: client disconnected",
+		zap.L().Info("client disconnected",
 			zap.String("client_address", conn.RemoteAddr().String()),
 		)
 	}()
-	zap.L().Info("game: client connected",
+	zap.L().Info("client connected",
 		zap.String("client_address", conn.RemoteAddr().String()),
 	)
 

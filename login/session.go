@@ -66,7 +66,7 @@ func (s *session) receivePktsFromClient(ctx context.Context) error {
 func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 	id, ok := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
-	zap.L().Info("login: received packet from server",
+	zap.L().Info("received packet from server",
 		zap.String("server_address", s.serverConn.RemoteAddr().String()),
 		zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		zap.String("message_name", name),
@@ -141,7 +141,7 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
 	id, ok := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
-	zap.L().Info("login: received packet from client",
+	zap.L().Info("received packet from client",
 		zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		zap.String("message_name", name),
 		zap.String("packet", pkt),
@@ -190,7 +190,7 @@ func (s *session) sendMsgToClient(msg d1proto.MsgSvr) error {
 func (s *session) sendPktToServer(pkt string) {
 	id, _ := d1proto.MsgCliIdByPkt(pkt)
 	name, _ := d1proto.MsgCliNameByID(id)
-	zap.L().Info("login: sent packet to server",
+	zap.L().Info("sent packet to server",
 		zap.String("server_address", s.serverConn.RemoteAddr().String()),
 		zap.String("message_name", name),
 		zap.String("packet", pkt),
@@ -201,7 +201,7 @@ func (s *session) sendPktToServer(pkt string) {
 func (s *session) sendPktToClient(pkt string) {
 	id, _ := d1proto.MsgSvrIdByPkt(pkt)
 	name, _ := d1proto.MsgSvrNameByID(id)
-	zap.L().Info("login: sent packet to client",
+	zap.L().Info("sent packet to client",
 		zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		zap.String("message_name", name),
 		zap.String("packet", pkt),

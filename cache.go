@@ -20,7 +20,7 @@ func (r *Cache) SetTicket(id string, t Ticket) {
 		r.tickets = make(map[string]Ticket)
 	}
 	r.tickets[id] = t
-	zap.L().Debug("d1sniff: ticket set",
+	zap.L().Debug("ticket set",
 		zap.String("ticket_id", id),
 	)
 }
@@ -31,7 +31,7 @@ func (r *Cache) UseTicket(id string) (Ticket, bool) {
 	t, ok := r.tickets[id]
 	if ok {
 		delete(r.tickets, id)
-		zap.L().Debug("d1sniff: ticket used",
+		zap.L().Debug("ticket used",
 			zap.String("ticket_id", id),
 		)
 	}
@@ -46,7 +46,7 @@ func (r *Cache) DeleteOldTickets(maxDur time.Duration) {
 		deadline := r.tickets[id].IssuedAt.Add(maxDur)
 		if now.After(deadline) {
 			delete(r.tickets, id)
-			zap.L().Debug("d1sniff: old ticket deleted",
+			zap.L().Debug("old ticket deleted",
 				zap.String("ticket_id", id),
 			)
 		}
