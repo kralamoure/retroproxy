@@ -45,28 +45,18 @@ func (p *Proxy) ListenAndServe(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
-	return p.serve(ctx, ln)
-}
-
-func (p *Proxy) serve(ctx context.Context, ln *net.TCPListener) error {
-	var wg sync.WaitGroup
-	defer wg.Wait()
-
 	defer func() {
 		ln.Close()
-		zap.L().Info("game: stopped serving",
+		zap.L().Info("game: stopped listening",
 			zap.String("address", ln.Addr().String()),
 		)
 	}()
-	zap.L().Info("game: serving",
+	zap.L().Info("game: listening",
 		zap.String("address", ln.Addr().String()),
 	)
-
 	p.ln = ln
 
 	errCh := make(chan error)
-
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -115,15 +105,6 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
-	s := &session{
-		proxy:      p,
-		clientConn: conn,
-		ticketCh:   make(chan d1sniff.Ticket),
-	}
-
-	defer p.trackSession(s, false)
-	p.trackSession(s, true)
-
 	defer func() {
 		conn.Close()
 		zap.L().Info("game: client disconnected",
@@ -133,6 +114,15 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 	zap.L().Info("game: client connected",
 		zap.String("client_address", conn.RemoteAddr().String()),
 	)
+
+	s := &session{
+		proxy:      p,
+		clientConn: conn,
+		ticketCh:   make(chan d1sniff.Ticket),
+	}
+
+	p.trackSession(s, true)
+	defer p.trackSession(s, false)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
