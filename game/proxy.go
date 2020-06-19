@@ -14,8 +14,11 @@ import (
 
 type Proxy struct {
 	addr *net.TCPAddr
-	ln   *net.TCPListener
 	repo d1sniff.Repo
+
+	ln       *net.TCPListener
+	sessions map[*session]struct{}
+	mu       sync.Mutex
 }
 
 func NewProxy(addr string, repo d1sniff.Repo) (*Proxy, error) {
@@ -41,7 +44,24 @@ func (p *Proxy) ListenAndServe(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer ln.Close()
+
+	return p.serve(ctx, ln)
+}
+
+func (p *Proxy) serve(ctx context.Context, ln *net.TCPListener) error {
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
+	defer func() {
+		ln.Close()
+		zap.L().Info("game: stopped serving",
+			zap.String("address", ln.Addr().String()),
+		)
+	}()
+	zap.L().Info("game: serving",
+		zap.String("address", ln.Addr().String()),
+	)
+
 	p.ln = ln
 
 	errCh := make(chan error)
@@ -49,7 +69,7 @@ func (p *Proxy) ListenAndServe(ctx context.Context) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := p.serve(ctx)
+		err := p.acceptLoop(ctx)
 		if err != nil {
 			select {
 			case errCh <- err:
@@ -66,15 +86,10 @@ func (p *Proxy) ListenAndServe(ctx context.Context) error {
 	}
 }
 
-func (p *Proxy) serve(ctx context.Context) error {
-	defer zap.L().Info("game: stopped serving",
-		zap.String("address", p.ln.Addr().String()),
-	)
-	zap.L().Info("game: serving",
-		zap.String("address", p.ln.Addr().String()),
-	)
+func (p *Proxy) acceptLoop(ctx context.Context) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
+
 	for {
 		conn, err := p.ln.AcceptTCP()
 		if err != nil {
@@ -99,6 +114,14 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
+	s := &session{
+		proxy:      p,
+		clientConn: conn,
+	}
+
+	defer p.trackSession(s, false)
+	p.trackSession(s, true)
+
 	defer func() {
 		conn.Close()
 		zap.L().Info("game: client disconnected",
@@ -111,11 +134,6 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	s := session{
-		proxy:      p,
-		clientConn: conn,
-	}
 
 	errCh := make(chan error)
 
@@ -148,5 +166,18 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 		return err
 	case <-ctx.Done():
 		return ctx.Err()
+	}
+}
+
+func (p *Proxy) trackSession(s *session, add bool) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if add {
+		if p.sessions == nil {
+			p.sessions = make(map[*session]struct{})
+		}
+		p.sessions[s] = struct{}{}
+	} else {
+		delete(p.sessions, s)
 	}
 }
