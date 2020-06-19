@@ -163,7 +163,10 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 		}
 	}()
 
-	s.sendMsgToClient(&msgsvr.AksHelloGame{})
+	err := s.sendMsgToClient(&msgsvr.AksHelloGame{})
+	if err != nil {
+		return err
+	}
 
 	select {
 	case err := <-errCh:
