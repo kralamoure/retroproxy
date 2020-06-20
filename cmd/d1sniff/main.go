@@ -21,11 +21,10 @@ import (
 	"github.com/kralamoure/d1sniff/login"
 )
 
-func main() {
-	os.Exit(run())
-}
+const version = "v1.0.0"
 
 var (
+	printVersion        bool
 	debug               bool
 	loginServerAddr     string
 	loginProxyAddr      string
@@ -35,6 +34,10 @@ var (
 
 var logger *zap.Logger
 
+func main() {
+	os.Exit(run())
+}
+
 func run() int {
 	err := loadVars()
 	if err != nil {
@@ -43,6 +46,11 @@ func run() int {
 		}
 		log.Println(err)
 		return 2
+	}
+
+	if printVersion {
+		fmt.Println(version)
+		return 0
 	}
 
 	if debug {
@@ -156,6 +164,7 @@ func run() int {
 
 func loadVars() error {
 	flags := pflag.NewFlagSet("d1sniff", pflag.ContinueOnError)
+	flags.BoolVarP(&printVersion, "version", "v", false, "Print version")
 	flags.BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
 	flags.StringVarP(&loginServerAddr, "server", "s",
 		"co-retro-0d2e31a98f729b76.elb.eu-west-1.amazonaws.com:443", "Dofus login server address")
