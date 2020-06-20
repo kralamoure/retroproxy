@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -11,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	flag "github.com/spf13/pflag"
+	"github.com/spf13/pflag"
 
 	"go.uber.org/zap"
 
@@ -35,7 +36,14 @@ var (
 var logger *zap.Logger
 
 func run() int {
-	loadVars()
+	err := loadVars()
+	if err != nil {
+		if errors.Is(err, pflag.ErrHelp) {
+			return 0
+		}
+		log.Println(err)
+		return 2
+	}
 
 	if debug {
 		traceFile, err := os.Create("trace.out")
@@ -146,12 +154,14 @@ func run() int {
 	return 0
 }
 
-func loadVars() {
-	flag.BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
-	flag.StringVarP(&loginServerAddr, "server", "s",
+func loadVars() error {
+	flags := pflag.NewFlagSet("d1sniff", pflag.ContinueOnError)
+	flags.BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
+	flags.StringVarP(&loginServerAddr, "server", "s",
 		"co-retro-0d2e31a98f729b76.elb.eu-west-1.amazonaws.com:443", "Dofus login server address")
-	flag.StringVarP(&loginProxyAddr, "login", "l", "0.0.0.0:5555", "Dofus login proxy listener address")
-	flag.StringVarP(&gameProxyAddr, "game", "g", "0.0.0.0:5556", "Dofus game proxy listener address")
-	flag.StringVarP(&gameProxyPublicAddr, "public", "p", "127.0.0.1:5556", "Dofus game proxy public address")
-	flag.Parse()
+	flags.StringVarP(&loginProxyAddr, "login", "l", "0.0.0.0:5555", "Dofus login proxy listener address")
+	flags.StringVarP(&gameProxyAddr, "game", "g", "0.0.0.0:5556", "Dofus game proxy listener address")
+	flags.StringVarP(&gameProxyPublicAddr, "public", "p", "127.0.0.1:5556", "Dofus game proxy public address")
+	flags.SortFlags = false
+	return flags.Parse(os.Args)
 }
