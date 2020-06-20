@@ -148,7 +148,8 @@ func run() int {
 
 func loadVars() {
 	flag.BoolVar(&debug, "d", false, "Enable debug mode")
-	flag.StringVar(&loginServerAddr, "a", "34.251.172.139:443", "Dofus login server address")
+	flag.StringVar(&loginServerAddr, "a",
+		"co-retro-0d2e31a98f729b76.elb.eu-west-1.amazonaws.com:443", "Dofus login server address")
 	flag.StringVar(&loginProxyPort, "lp", "5555", "Dofus login proxy port")
 	flag.StringVar(&gameProxyPort, "gp", "5556", "Dofus game proxy port")
 	flag.BoolVar(&talkToEveryNPC, "npc", true, "Automatically talk to every NPC")
