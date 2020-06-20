@@ -30,7 +30,6 @@ var (
 	loginProxyAddr      string
 	gameProxyAddr       string
 	gameProxyPublicAddr string
-	talkToEveryNPC      bool
 )
 
 var logger *zap.Logger
