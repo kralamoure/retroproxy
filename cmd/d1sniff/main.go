@@ -2,16 +2,16 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
-	"net"
 	"os"
 	"os/signal"
 	"runtime/trace"
 	"sync"
 	"syscall"
 	"time"
+
+	flag "github.com/spf13/pflag"
 
 	"go.uber.org/zap"
 
@@ -27,8 +27,8 @@ func main() {
 var (
 	debug           bool
 	loginServerAddr string
-	loginProxyPort  string
-	gameProxyPort   string
+	loginProxyAddr  string
+	gameProxyAddr   string
 	talkToEveryNPC  bool
 )
 
@@ -84,9 +84,9 @@ func run() int {
 	repo := d1sniff.NewCache(logger.Named("cache"))
 
 	loginPx, err := login.NewProxy(
-		net.JoinHostPort("127.0.0.1", loginProxyPort),
+		loginProxyAddr,
 		loginServerAddr,
-		net.JoinHostPort("127.0.0.1", gameProxyPort),
+		gameProxyAddr,
 		repo,
 		logger.Named("login"),
 	)
@@ -107,7 +107,7 @@ func run() int {
 	}()
 
 	gamePx, err := game.NewProxy(
-		net.JoinHostPort("127.0.0.1", gameProxyPort),
+		gameProxyAddr,
 		repo,
 		logger.Named("game"),
 	)
@@ -147,11 +147,10 @@ func run() int {
 }
 
 func loadVars() {
-	flag.BoolVar(&debug, "d", false, "Enable debug mode")
-	flag.StringVar(&loginServerAddr, "a",
+	flag.BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
+	flag.StringVarP(&loginServerAddr, "server", "s",
 		"co-retro-0d2e31a98f729b76.elb.eu-west-1.amazonaws.com:443", "Dofus login server address")
-	flag.StringVar(&loginProxyPort, "lp", "5555", "Dofus login proxy port")
-	flag.StringVar(&gameProxyPort, "gp", "5556", "Dofus game proxy port")
-	flag.BoolVar(&talkToEveryNPC, "npc", true, "Automatically talk to every NPC")
+	flag.StringVarP(&loginProxyAddr, "login", "l", "0.0.0.0:5555", "Dofus login proxy address")
+	flag.StringVarP(&gameProxyAddr, "game", "g", "0.0.0.0:5556", "Dofus game proxy address")
 	flag.Parse()
 }
