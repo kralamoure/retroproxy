@@ -27,7 +27,7 @@ type Proxy struct {
 	mu       sync.Mutex
 }
 
-func NewProxy(addr, serverAddr, gameAddr string, repo d1sniff.Repo, logger *zap.Logger) (*Proxy, error) {
+func NewProxy(addr, serverAddr, gamePublicAddr string, repo d1sniff.Repo, logger *zap.Logger) (*Proxy, error) {
 	if repo == nil {
 		return nil, errors.New("repository is nil")
 	}
@@ -35,15 +35,15 @@ func NewProxy(addr, serverAddr, gameAddr string, repo d1sniff.Repo, logger *zap.
 		logger = zap.NewNop()
 	}
 
-	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+	tcpAddr, err := net.ResolveTCPAddr("tcp4", addr)
 	if err != nil {
 		return nil, err
 	}
-	tcpServerAddr, err := net.ResolveTCPAddr("tcp", serverAddr)
+	tcpServerAddr, err := net.ResolveTCPAddr("tcp4", serverAddr)
 	if err != nil {
 		return nil, err
 	}
-	gameHost, gamePort, err := net.SplitHostPort(gameAddr)
+	gameHost, gamePort, err := net.SplitHostPort(gamePublicAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (p *Proxy) ListenAndServe(ctx context.Context) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
-	ln, err := net.ListenTCP("tcp", p.addr)
+	ln, err := net.ListenTCP("tcp4", p.addr)
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func (p *Proxy) handleClientConn(ctx context.Context, conn *net.TCPConn) error {
 	p.trackSession(s, true)
 	defer p.trackSession(s, false)
 
-	serverConn, err := net.DialTimeout("tcp", p.serverAddr.String(), 3*time.Second)
+	serverConn, err := net.DialTimeout("tcp4", p.serverAddr.String(), 3*time.Second)
 	if err != nil {
 		return err
 	}

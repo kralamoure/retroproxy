@@ -25,11 +25,12 @@ func main() {
 }
 
 var (
-	debug           bool
-	loginServerAddr string
-	loginProxyAddr  string
-	gameProxyAddr   string
-	talkToEveryNPC  bool
+	debug               bool
+	loginServerAddr     string
+	loginProxyAddr      string
+	gameProxyAddr       string
+	gameProxyPublicAddr string
+	talkToEveryNPC      bool
 )
 
 var logger *zap.Logger
@@ -86,7 +87,7 @@ func run() int {
 	loginPx, err := login.NewProxy(
 		loginProxyAddr,
 		loginServerAddr,
-		gameProxyAddr,
+		gameProxyPublicAddr,
 		repo,
 		logger.Named("login"),
 	)
@@ -150,7 +151,8 @@ func loadVars() {
 	flag.BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
 	flag.StringVarP(&loginServerAddr, "server", "s",
 		"co-retro-0d2e31a98f729b76.elb.eu-west-1.amazonaws.com:443", "Dofus login server address")
-	flag.StringVarP(&loginProxyAddr, "login", "l", ":5555", "Dofus login proxy address")
-	flag.StringVarP(&gameProxyAddr, "game", "g", ":5556", "Dofus game proxy address")
+	flag.StringVarP(&loginProxyAddr, "login", "l", ":5555", "Dofus login proxy listener address")
+	flag.StringVarP(&gameProxyAddr, "game", "g", ":5556", "Dofus game proxy listener address")
+	flag.StringVarP(&gameProxyPublicAddr, "public", "p", "127.0.0.1:5556", "Dofus game proxy public address")
 	flag.Parse()
 }

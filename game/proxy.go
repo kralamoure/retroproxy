@@ -31,7 +31,7 @@ func NewProxy(addr string, repo d1sniff.Repo, logger *zap.Logger) (*Proxy, error
 		logger = zap.NewNop()
 	}
 
-	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+	tcpAddr, err := net.ResolveTCPAddr("tcp4", addr)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (p *Proxy) ListenAndServe(ctx context.Context) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
-	ln, err := net.ListenTCP("tcp", p.addr)
+	ln, err := net.ListenTCP("tcp4", p.addr)
 	if err != nil {
 		return err
 	}

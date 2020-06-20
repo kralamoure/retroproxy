@@ -40,7 +40,7 @@ func (s *session) connectToServer(ctx context.Context) error {
 	case t := <-s.ticketCh:
 		s.ticket = t
 
-		conn, err := net.DialTimeout("tcp", net.JoinHostPort(t.Host, t.Port), 3*time.Second)
+		conn, err := net.DialTimeout("tcp4", net.JoinHostPort(t.Host, t.Port), 3*time.Second)
 		if err != nil {
 			return err
 		}
