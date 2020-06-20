@@ -4,8 +4,6 @@
 server, and eventually one to a game server, while logging every packet between the proxies and the servers, so you can
 analyze the packets later.
 
-It can automatically talk to every NPC — while hiding from the client the dialogs caused by this behavior.
-
 Some examples of what you can do with this tool:
 
 - Reverse engineer a server
