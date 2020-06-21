@@ -23,13 +23,13 @@ Some examples of what you can do with this tool:
 ```sh
 git clone https://github.com/kralamoure/d1sniff
 cd d1sniff
-go build ./cmd/d1sniff
+go build ./cmd/...
 ```
 
 ## Installation
 
 ```sh
-go get github.com/kralamoure/d1sniff/cmd/d1sniff
+go get github.com/kralamoure/d1sniff/...
 ```
 
 ## Usage
