@@ -23,7 +23,7 @@ Some examples of what you can do with this tool:
 ```sh
 git clone https://github.com/kralamoure/d1sniff
 cd d1sniff
-go build
+go build ./cmd/d1sniff
 ```
 
 ## Installation
