@@ -29,7 +29,7 @@ type Proxy struct {
 
 func NewProxy(addr, serverAddr, gamePublicAddr string, repo d1sniff.Repo, logger *zap.Logger) (*Proxy, error) {
 	if repo == nil {
-		return nil, errors.New("repository is nil")
+		return nil, errors.New("repository should not be nil")
 	}
 	if logger == nil {
 		logger = zap.NewNop()
