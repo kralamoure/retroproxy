@@ -12,8 +12,8 @@ github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORN
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
-github.com/kralamoure/d1proto v0.0.0-20200615174349-63f6d3dfff63 h1:P6RElXecFbdj0EipWVoNdWiUMrIYHlQZpHLo2U+h16M=
-github.com/kralamoure/d1proto v0.0.0-20200615174349-63f6d3dfff63/go.mod h1:c0AU6u1JK7jHGy0GjWqkyap6PhDc4sgh8JvzBYnRtGI=
+github.com/kralamoure/d1proto v0.0.0-20200709235144-3fd5aa239f11 h1:lr4sQ1RWiaqhFVOq8HY0qrJpRVQbJOzYP09DjX/zmu4=
+github.com/kralamoure/d1proto v0.0.0-20200709235144-3fd5aa239f11/go.mod h1:c0AU6u1JK7jHGy0GjWqkyap6PhDc4sgh8JvzBYnRtGI=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
