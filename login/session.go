@@ -99,8 +99,13 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 				}
 
 				t.Host = msg.Host
-				t.Port = msg.Port
 				t.Original = msg.Ticket
+
+				if msg.Port == "" {
+					t.Port = "443"
+				} else {
+					t.Port = msg.Port
+				}
 			} else {
 				msg := &msgsvr.AccountSelectServerPlainSuccess{}
 				err := msg.Deserialize(extra)
@@ -109,8 +114,13 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 				}
 
 				t.Host = msg.Host
-				t.Port = msg.Port
 				t.Original = msg.Ticket
+
+				if msg.Port == "" {
+					t.Port = "443"
+				} else {
+					t.Port = msg.Port
+				}
 			}
 
 			id, err := uuid.NewV4()
