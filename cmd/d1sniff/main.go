@@ -21,7 +21,7 @@ import (
 	"github.com/kralamoure/d1sniff/login"
 )
 
-const version = "v1.0.0"
+const version = "v1.1.0"
 
 var (
 	printVersion        bool
