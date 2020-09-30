@@ -21,7 +21,7 @@ import (
 	"github.com/kralamoure/d1sniff/login"
 )
 
-const version = "v1.1.0"
+const version = "v1.2.0"
 
 var (
 	printVersion        bool
@@ -167,7 +167,7 @@ func loadVars() error {
 	flags.BoolVarP(&printVersion, "version", "v", false, "Print version")
 	flags.BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
 	flags.StringVarP(&loginServerAddr, "server", "s",
-		"co-retro-0d2e31a98f729b76.elb.eu-west-1.amazonaws.com:443", "Dofus login server address")
+		"co-retro.ankama-games.com:443", "Dofus login server address")
 	flags.StringVarP(&loginProxyAddr, "login", "l", "0.0.0.0:5555", "Dofus login proxy listener address")
 	flags.StringVarP(&gameProxyAddr, "game", "g", "0.0.0.0:5556", "Dofus game proxy listener address")
 	flags.StringVarP(&gameProxyPublicAddr, "public", "p", "127.0.0.1:5556", "Dofus game proxy public address")
