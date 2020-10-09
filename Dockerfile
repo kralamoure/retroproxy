@@ -1,4 +1,4 @@
-FROM golang:1.15.2-alpine3.12 AS builder
+FROM golang:1.15.2-buster AS builder
 
 RUN apk add git
 RUN git config --global credential.helper store
@@ -9,9 +9,11 @@ COPY . .
 
 RUN go install -v ./...
 
-FROM alpine:3.12.0
+FROM ubuntu:20.04
 
 LABEL org.opencontainers.image.source = "https://github.com/kralamoure/d1proxy"
+
+RUN apt-get update && apt-get install -y
 
 WORKDIR /app
 COPY --from=builder /go/bin/ .
