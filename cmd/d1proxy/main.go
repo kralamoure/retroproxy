@@ -21,7 +21,7 @@ import (
 	"github.com/kralamoure/d1proxy/login"
 )
 
-const version = "v1.3.0"
+const version = "v1.4.0"
 
 var (
 	printVersion        bool
