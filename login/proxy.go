@@ -11,14 +11,14 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/kralamoure/d1sniff"
+	"github.com/kralamoure/d1proxy"
 )
 
 type Proxy struct {
 	logger     *zap.Logger
 	addr       *net.TCPAddr
 	serverAddr *net.TCPAddr
-	repo       d1sniff.Repo
+	repo       d1proxy.Repo
 	forceAdmin bool
 
 	gameHost string
@@ -36,7 +36,7 @@ type proxyCache struct {
 	uuidByUsername map[string]string // guarded by proxy mu
 }
 
-func NewProxy(addr, serverAddr, gamePublicAddr string, repo d1sniff.Repo, forceAdmin bool, logger *zap.Logger) (*Proxy, error) {
+func NewProxy(addr, serverAddr, gamePublicAddr string, repo d1proxy.Repo, forceAdmin bool, logger *zap.Logger) (*Proxy, error) {
 	if repo == nil {
 		return nil, errors.New("repository should not be nil")
 	}

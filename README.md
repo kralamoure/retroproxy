@@ -1,6 +1,6 @@
-# d1sniff
+# d1proxy
 
-`d1sniff` is a tool for sniffing packets from Dofus 1 login/game servers. It works by starting a proxy to a login
+`d1proxy` is a tool for sniffing packets from Dofus 1 login/game servers. It works by starting a proxy to a login
 server and another one to a game server, while logging every packet between the connections, for further
 analysis.
 
@@ -21,19 +21,19 @@ Some examples of what you can do with this tool:
 ## Build
 
 ```sh
-git clone https://github.com/kralamoure/d1sniff
-cd d1sniff
+git clone https://github.com/kralamoure/d1proxy
+cd d1proxy
 go build ./cmd/...
 ```
 
 ## Installation
 
 ```sh
-go get -u -v github.com/kralamoure/d1sniff/...
+go get -u -v github.com/kralamoure/d1proxy/...
 ```
 
 ## Usage
 
 ```sh
-d1sniff --help
+d1proxy --help
 ```

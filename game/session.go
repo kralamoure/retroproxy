@@ -15,7 +15,7 @@ import (
 	"github.com/kralamoure/d1proto/msgsvr"
 	"go.uber.org/zap"
 
-	"github.com/kralamoure/d1sniff"
+	"github.com/kralamoure/d1proxy"
 )
 
 type session struct {
@@ -23,8 +23,8 @@ type session struct {
 	clientConn *net.TCPConn
 	serverConn *net.TCPConn
 
-	ticket              d1sniff.Ticket
-	ticketCh            chan d1sniff.Ticket
+	ticket              d1proxy.Ticket
+	ticketCh            chan d1proxy.Ticket
 	connectedToServerCh chan struct{}
 
 	firstPkt bool

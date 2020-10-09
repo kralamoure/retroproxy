@@ -15,7 +15,7 @@ import (
 	"github.com/kralamoure/d1proto/msgsvr"
 	"go.uber.org/zap"
 
-	"github.com/kralamoure/d1sniff"
+	"github.com/kralamoure/d1proxy"
 )
 
 var errEndOfService = errors.New("end of service")
@@ -113,7 +113,7 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 				return ctx.Err()
 			}
 
-			t := d1sniff.Ticket{ServerId: serverId}
+			t := d1proxy.Ticket{ServerId: serverId}
 
 			if id == d1proto.AccountSelectServerSuccess {
 				msg := &msgsvr.AccountSelectServerSuccess{}

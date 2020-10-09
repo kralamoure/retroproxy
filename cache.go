@@ -1,4 +1,4 @@
-package d1sniff
+package d1proxy
 
 import (
 	"sync"

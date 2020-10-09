@@ -1,4 +1,4 @@
-module github.com/kralamoure/d1sniff
+module github.com/kralamoure/d1proxy
 
 go 1.15
 

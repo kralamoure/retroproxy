@@ -13,4 +13,4 @@ FROM alpine:3.12.0
 WORKDIR /app
 COPY --from=builder /go/bin/ .
 
-ENTRYPOINT ["./d1sniff"]
+ENTRYPOINT ["./d1proxy"]
