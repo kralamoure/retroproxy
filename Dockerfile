@@ -1,6 +1,5 @@
 FROM golang:1.15.2-buster AS builder
 
-RUN apk add git
 RUN git config --global credential.helper store
 COPY .git-credentials /root/.git-credentials
 
