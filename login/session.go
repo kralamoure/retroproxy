@@ -87,6 +87,18 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 	if ok {
 		extra := strings.TrimPrefix(pkt, string(id))
 		switch id {
+		case d1proto.AccountLoginSuccess:
+			msg := &msgsvr.AccountLoginSuccess{}
+			err := msg.Deserialize(extra)
+			if err != nil {
+				return err
+			}
+
+			if s.proxy.forceAdmin {
+				msg.Authorized = true
+			}
+
+			return s.sendMsgToClient(msg)
 		case d1proto.AccountSelectServerError:
 			select {
 			case <-s.serverIdCh:

@@ -19,6 +19,7 @@ type Proxy struct {
 	addr       *net.TCPAddr
 	serverAddr *net.TCPAddr
 	repo       d1sniff.Repo
+	forceAdmin bool
 
 	gameHost string
 	gamePort string
@@ -35,7 +36,7 @@ type proxyCache struct {
 	uuidByUsername map[string]string // guarded by proxy mu
 }
 
-func NewProxy(addr, serverAddr, gamePublicAddr string, repo d1sniff.Repo, logger *zap.Logger) (*Proxy, error) {
+func NewProxy(addr, serverAddr, gamePublicAddr string, repo d1sniff.Repo, forceAdmin bool, logger *zap.Logger) (*Proxy, error) {
 	if repo == nil {
 		return nil, errors.New("repository should not be nil")
 	}
@@ -76,6 +77,7 @@ func NewProxy(addr, serverAddr, gamePublicAddr string, repo d1sniff.Repo, logger
 		gameHost:   gameHost,
 		gamePort:   gamePort,
 		repo:       repo,
+		forceAdmin: forceAdmin,
 		cache: proxyCache{
 			serverPort:     serverPort,
 			uuidByUsername: make(map[string]string),
