@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
@@ -25,12 +26,19 @@ type Proxy struct {
 	ln       *net.TCPListener
 	sessions map[*session]struct{}
 	mu       sync.Mutex
+
+	cache proxyCache
+}
+
+type proxyCache struct {
+	serverPort int
 }
 
 func NewProxy(addr, serverAddr, gamePublicAddr string, repo d1sniff.Repo, logger *zap.Logger) (*Proxy, error) {
 	if repo == nil {
 		return nil, errors.New("repository should not be nil")
 	}
+
 	if logger == nil {
 		logger = zap.NewNop()
 	}
@@ -39,14 +47,27 @@ func NewProxy(addr, serverAddr, gamePublicAddr string, repo d1sniff.Repo, logger
 	if err != nil {
 		return nil, err
 	}
+
 	tcpServerAddr, err := net.ResolveTCPAddr("tcp4", serverAddr)
 	if err != nil {
 		return nil, err
 	}
+
+	_, serverPortStr, err := net.SplitHostPort(serverAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	serverPort, err := strconv.Atoi(serverPortStr)
+	if err != nil {
+		return nil, err
+	}
+
 	gameHost, gamePort, err := net.SplitHostPort(gamePublicAddr)
 	if err != nil {
 		return nil, err
 	}
+
 	return &Proxy{
 		logger:     logger,
 		addr:       tcpAddr,
@@ -54,6 +75,9 @@ func NewProxy(addr, serverAddr, gamePublicAddr string, repo d1sniff.Repo, logger
 		gameHost:   gameHost,
 		gamePort:   gamePort,
 		repo:       repo,
+		cache: proxyCache{
+			serverPort: serverPort,
+		},
 	}, nil
 }
 

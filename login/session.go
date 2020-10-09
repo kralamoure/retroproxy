@@ -18,6 +18,8 @@ import (
 	"github.com/kralamoure/d1sniff"
 )
 
+var errEndOfService = errors.New("end of service")
+
 type session struct {
 	proxy      *Proxy
 	clientConn *net.TCPConn
@@ -25,7 +27,15 @@ type session struct {
 	serverIdCh chan int
 }
 
-var errEndOfService = errors.New("end of service")
+type msgOutCli interface {
+	ProtocolId() (id d1proto.MsgCliId)
+	Serialized() (extra string, err error)
+}
+
+type msgOutSvr interface {
+	ProtocolId() (id d1proto.MsgSvrId)
+	Serialized() (extra string, err error)
+}
 
 func (s *session) receivePktsFromServer(ctx context.Context) error {
 	rd := bufio.NewReader(s.serverConn)
@@ -131,12 +141,12 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 			t.IssuedAt = time.Now()
 			s.proxy.repo.SetTicket(id.String(), t)
 
-			msgOut := &msgsvr.AccountSelectServerPlainSuccess{
+			msg := &msgsvr.AccountSelectServerPlainSuccess{
 				Host:   s.proxy.gameHost,
 				Port:   s.proxy.gamePort,
 				Ticket: id.String(),
 			}
-			err = s.sendMsgToClient(msgOut)
+			err = s.sendMsgToClient(msg)
 			if err != nil {
 				return err
 			}
@@ -157,12 +167,12 @@ func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
 		zap.String("packet", pkt),
 	)
 
-	s.sendPktToServer(pkt)
-
 	if ok {
 		extra := strings.TrimPrefix(pkt, string(id))
 		switch id {
 		case d1proto.AccountSetServer:
+			s.sendPktToServer(pkt)
+
 			msg := &msgcli.AccountSetServer{}
 			err := msg.Deserialize(extra)
 			if err != nil {
@@ -171,15 +181,25 @@ func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
 
 			select {
 			case s.serverIdCh <- msg.Id:
+				return nil
 			case <-ctx.Done():
 				return ctx.Err()
 			}
+		case d1proto.AccountConfiguredPort:
+			err := s.sendMsgToServer(msgcli.AccountConfiguredPort{Port: s.proxy.cache.serverPort})
+			if err != nil {
+				return err
+			}
+			return nil
 		}
 	}
+
+	s.sendPktToServer(pkt)
+
 	return nil
 }
 
-func (s *session) sendMsgToServer(msg d1proto.MsgCli) error {
+func (s *session) sendMsgToServer(msg msgOutCli) error {
 	pkt, err := msg.Serialized()
 	if err != nil {
 		return err
@@ -188,7 +208,7 @@ func (s *session) sendMsgToServer(msg d1proto.MsgCli) error {
 	return nil
 }
 
-func (s *session) sendMsgToClient(msg d1proto.MsgSvr) error {
+func (s *session) sendMsgToClient(msg msgOutSvr) error {
 	pkt, err := msg.Serialized()
 	if err != nil {
 		return err
