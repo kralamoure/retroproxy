@@ -31,7 +31,8 @@ type Proxy struct {
 }
 
 type proxyCache struct {
-	serverPort int
+	serverPort     int
+	uuidByUsername map[string]string // guarded by proxy mu
 }
 
 func NewProxy(addr, serverAddr, gamePublicAddr string, repo d1sniff.Repo, logger *zap.Logger) (*Proxy, error) {
@@ -76,7 +77,8 @@ func NewProxy(addr, serverAddr, gamePublicAddr string, repo d1sniff.Repo, logger
 		gamePort:   gamePort,
 		repo:       repo,
 		cache: proxyCache{
-			serverPort: serverPort,
+			serverPort:     serverPort,
+			uuidByUsername: make(map[string]string),
 		},
 	}, nil
 }

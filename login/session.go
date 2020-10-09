@@ -25,6 +25,8 @@ type session struct {
 	clientConn *net.TCPConn
 	serverConn *net.TCPConn
 	serverIdCh chan int
+
+	username string
 }
 
 type msgOutCli interface {
@@ -170,6 +172,13 @@ func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
 	if ok {
 		extra := strings.TrimPrefix(pkt, string(id))
 		switch id {
+		case d1proto.AccountCredential:
+			msg := &msgcli.AccountCredential{}
+			err := msg.Deserialize(extra)
+			if err != nil {
+				return err
+			}
+			s.username = msg.Username
 		case d1proto.AccountSetServer:
 			s.sendPktToServer(pkt)
 
@@ -186,17 +195,37 @@ func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
 				return ctx.Err()
 			}
 		case d1proto.AccountConfiguredPort:
-			err := s.sendMsgToServer(msgcli.AccountConfiguredPort{Port: s.proxy.cache.serverPort})
+			return s.sendMsgToServer(msgcli.AccountConfiguredPort{Port: s.proxy.cache.serverPort})
+		case d1proto.AccountSendIdentity:
+			id, err := s.identity(ctx)
 			if err != nil {
 				return err
 			}
-			return nil
+			return s.sendMsgToServer(msgcli.AccountSendIdentity{Id: id})
 		}
 	}
 
 	s.sendPktToServer(pkt)
 
 	return nil
+}
+
+func (s *session) identity(ctx context.Context) (string, error) {
+	v, err := uuid.NewV4()
+	if err != nil {
+		return "", err
+	}
+
+	s.proxy.mu.Lock()
+	defer s.proxy.mu.Unlock()
+
+	id, ok := s.proxy.cache.uuidByUsername[s.username]
+	if !ok {
+		id = v.String()
+		s.proxy.cache.uuidByUsername[s.username] = id
+	}
+
+	return id, nil
 }
 
 func (s *session) sendMsgToServer(msg msgOutCli) error {
