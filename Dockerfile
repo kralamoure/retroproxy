@@ -1,3 +1,5 @@
+LABEL org.opencontainers.image.source = "https://github.com/kralamoure/d1proxy"
+
 FROM golang:1.15.2-alpine3.12 AS builder
 
 RUN apk add git
