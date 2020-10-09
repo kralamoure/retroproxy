@@ -1,5 +1,3 @@
-LABEL org.opencontainers.image.source = "https://github.com/kralamoure/d1proxy"
-
 FROM golang:1.15.2-alpine3.12 AS builder
 
 RUN apk add git
@@ -12,6 +10,9 @@ COPY . .
 RUN go install -v ./...
 
 FROM alpine:3.12.0
+
+LABEL org.opencontainers.image.source = "https://github.com/kralamoure/d1proxy"
+
 WORKDIR /app
 COPY --from=builder /go/bin/ .
 
