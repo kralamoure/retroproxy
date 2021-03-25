@@ -6,6 +6,7 @@ COPY .git-credentials /root/.git-credentials
 WORKDIR /app
 COPY . .
 
+RUN go env -w GOPRIVATE=github.com/kralamoure
 RUN go install -v ./...
 
 FROM ubuntu:20.04
