@@ -33,5 +33,5 @@ Usage of d1proxy:
   -l, --login string    Dofus login proxy listener address (default "0.0.0.0:5555")
   -g, --game string     Dofus game proxy listener address (default "0.0.0.0:5556")
   -p, --public string   Dofus game proxy public address (default "127.0.0.1:5556")
-  -a, --admin           Force client's admin mode
+  -a, --admin           Force client\'s admin mode
 ```
