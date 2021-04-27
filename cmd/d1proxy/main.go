@@ -164,7 +164,7 @@ func loadVars() error {
 	flags.StringVarP(&loginProxyAddr, "login", "l", "0.0.0.0:5555", "Dofus login proxy listener address")
 	flags.StringVarP(&gameProxyAddr, "game", "g", "0.0.0.0:5556", "Dofus game proxy listener address")
 	flags.StringVarP(&gameProxyPublicAddr, "public", "p", "127.0.0.1:5556", "Dofus game proxy public address")
-	flags.BoolVarP(&forceAdmin, "admin", "a", false, "Force client's admin mode")
+	flags.BoolVarP(&forceAdmin, "admin", "a", false, "Force admin mode on the client")
 	flags.SortFlags = false
 	return flags.Parse(os.Args)
 }
