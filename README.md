@@ -1,6 +1,6 @@
 # d1proxy
 
-`d1proxy` is a proxy for Dofus 1 login/game servers.
+`d1proxy` is a proxy for Dofus 1 login and game servers.
 
 ## Requirements
 
