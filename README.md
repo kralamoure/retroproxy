@@ -10,21 +10,21 @@
 ## Build
 
 ```sh
-> git clone https://github.com/kralamoure/d1proxy
-> cd d1proxy
-> go build ./cmd/...
+git clone https://github.com/kralamoure/d1proxy
+cd d1proxy
+go build ./cmd/...
 ```
 
 ## Installation
 
 ```sh
-> go get -u -v github.com/kralamoure/d1proxy/...
+go get -u -v github.com/kralamoure/d1proxy/...
 ```
 
 ## Usage
 
 ```sh
-> d1proxy --help
+d1proxy --help
 ```
 
 ### Output
