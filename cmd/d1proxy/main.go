@@ -81,12 +81,8 @@ func run() int {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
-
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
-	defer signal.Stop(sigCh)
 
 	errCh := make(chan error)
 
@@ -144,10 +140,6 @@ func run() int {
 	}()
 
 	select {
-	case sig := <-sigCh:
-		logger.Info("received signal",
-			zap.String("signal", sig.String()),
-		)
 	case err := <-errCh:
 		logger.Error(err.Error())
 		return 1
