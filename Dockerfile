@@ -1,4 +1,4 @@
-FROM golang:1.16.2-buster AS builder
+FROM golang:1.16.3-buster AS builder
 
 RUN git config --global credential.helper store
 COPY .git-credentials /root/.git-credentials
