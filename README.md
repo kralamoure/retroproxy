@@ -1,6 +1,6 @@
-# d1proxy
+# retroproxy
 
-`d1proxy` is a proxy for Dofus 1 login and game servers.
+`retroproxy` is a proxy for Dofus 1 login and game servers.
 
 ## Requirements
 
@@ -10,27 +10,27 @@
 ## Build
 
 ```sh
-git clone https://github.com/kralamoure/d1proxy
-cd d1proxy
+git clone https://github.com/kralamoure/retroproxy
+cd retroproxy
 go build ./cmd/...
 ```
 
 ## Installation
 
 ```sh
-go get -u -v github.com/kralamoure/d1proxy/...
+go get -u -v github.com/kralamoure/retroproxy/...
 ```
 
 ## Usage
 
 ```sh
-d1proxy --help
+retroproxy --help
 ```
 
 ### Output
 
 ```text
-Usage of d1proxy:
+Usage of retroproxy:
   -d, --debug           Enable debug mode
   -s, --server string   Dofus login server address (default "co-retro.ankama-games.com:443")
   -l, --login string    Dofus login proxy listener address (default "0.0.0.0:5555")

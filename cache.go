@@ -1,4 +1,4 @@
-package d1proxy
+package retroproxy
 
 import (
 	"sync"

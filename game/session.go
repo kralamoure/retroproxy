@@ -10,12 +10,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kralamoure/d1proto"
-	"github.com/kralamoure/d1proto/msgcli"
-	"github.com/kralamoure/d1proto/msgsvr"
+	"github.com/kralamoure/retroproto"
+	"github.com/kralamoure/retroproto/msgcli"
+	"github.com/kralamoure/retroproto/msgsvr"
 	"go.uber.org/zap"
 
-	"github.com/kralamoure/d1proxy"
+	"github.com/kralamoure/retroproxy"
 )
 
 type session struct {
@@ -23,8 +23,8 @@ type session struct {
 	clientConn *net.TCPConn
 	serverConn *net.TCPConn
 
-	ticket              d1proxy.Ticket
-	ticketCh            chan d1proxy.Ticket
+	ticket              retroproxy.Ticket
+	ticketCh            chan retroproxy.Ticket
 	connectedToServerCh chan struct{}
 
 	firstPkt bool
@@ -117,8 +117,8 @@ func (s *session) receivePktsFromClient(ctx context.Context) error {
 }
 
 func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
-	id, ok := d1proto.MsgSvrIdByPkt(pkt)
-	name, _ := d1proto.MsgSvrNameByID(id)
+	id, ok := retroproto.MsgSvrIdByPkt(pkt)
+	name, _ := retroproto.MsgSvrNameByID(id)
 	s.proxy.logger.Info("received packet from server",
 		zap.String("server_address", s.serverConn.RemoteAddr().String()),
 		zap.String("client_address", s.clientConn.RemoteAddr().String()),
@@ -127,7 +127,7 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 	)
 	if ok {
 		switch id {
-		case d1proto.AksHelloGame:
+		case retroproto.AksHelloGame:
 			err := s.sendMsgToServer(&msgcli.AccountSendTicket{Ticket: s.ticket.Original})
 			if err != nil {
 				return err
@@ -140,8 +140,8 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 }
 
 func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
-	id, ok := d1proto.MsgCliIdByPkt(pkt)
-	name, _ := d1proto.MsgCliNameByID(id)
+	id, ok := retroproto.MsgCliIdByPkt(pkt)
+	name, _ := retroproto.MsgCliNameByID(id)
 	s.proxy.logger.Info("received packet from client",
 		zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		zap.String("message_name", name),
@@ -153,7 +153,7 @@ func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
 	if ok {
 		extra := strings.TrimPrefix(pkt, string(id))
 		switch id {
-		case d1proto.AccountSendTicket:
+		case retroproto.AccountSendTicket:
 			if !s.firstPkt {
 				return errors.New("unexpected packet")
 			}
@@ -189,7 +189,7 @@ func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
 	return nil
 }
 
-func (s *session) sendMsgToServer(msg d1proto.MsgCli) error {
+func (s *session) sendMsgToServer(msg retroproto.MsgCli) error {
 	pkt, err := msg.Serialized()
 	if err != nil {
 		return err
@@ -198,7 +198,7 @@ func (s *session) sendMsgToServer(msg d1proto.MsgCli) error {
 	return nil
 }
 
-func (s *session) sendMsgToClient(msg d1proto.MsgSvr) error {
+func (s *session) sendMsgToClient(msg retroproto.MsgSvr) error {
 	pkt, err := msg.Serialized()
 	if err != nil {
 		return err
@@ -208,8 +208,8 @@ func (s *session) sendMsgToClient(msg d1proto.MsgSvr) error {
 }
 
 func (s *session) sendPktToServer(pkt string) {
-	id, _ := d1proto.MsgCliIdByPkt(pkt)
-	name, _ := d1proto.MsgCliNameByID(id)
+	id, _ := retroproto.MsgCliIdByPkt(pkt)
+	name, _ := retroproto.MsgCliNameByID(id)
 	s.proxy.logger.Info("sent packet to server",
 		zap.String("server_address", s.serverConn.RemoteAddr().String()),
 		zap.String("message_name", name),
@@ -219,8 +219,8 @@ func (s *session) sendPktToServer(pkt string) {
 }
 
 func (s *session) sendPktToClient(pkt string) {
-	id, _ := d1proto.MsgSvrIdByPkt(pkt)
-	name, _ := d1proto.MsgSvrNameByID(id)
+	id, _ := retroproto.MsgSvrIdByPkt(pkt)
+	name, _ := retroproto.MsgSvrNameByID(id)
 	s.proxy.logger.Info("sent packet to client",
 		zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		zap.String("message_name", name),

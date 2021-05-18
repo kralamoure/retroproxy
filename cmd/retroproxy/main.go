@@ -16,9 +16,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/kralamoure/d1proxy"
-	"github.com/kralamoure/d1proxy/game"
-	"github.com/kralamoure/d1proxy/login"
+	"github.com/kralamoure/retroproxy"
+	"github.com/kralamoure/retroproxy/game"
+	"github.com/kralamoure/retroproxy/login"
 )
 
 var (
@@ -86,7 +86,7 @@ func run() int {
 
 	errCh := make(chan error)
 
-	repo := d1proxy.NewCache(logger.Named("cache"))
+	repo := retroproxy.NewCache(logger.Named("cache"))
 
 	loginPx, err := login.NewProxy(
 		loginProxyAddr,
@@ -136,7 +136,7 @@ func run() int {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		d1proxy.DeleteOldTicketsLoop(ctx, repo, 10*time.Second)
+		retroproxy.DeleteOldTicketsLoop(ctx, repo, 10*time.Second)
 	}()
 
 	select {
@@ -149,7 +149,7 @@ func run() int {
 }
 
 func loadVars() error {
-	flags := pflag.NewFlagSet("d1proxy", pflag.ContinueOnError)
+	flags := pflag.NewFlagSet("retroproxy", pflag.ContinueOnError)
 	flags.BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
 	flags.StringVarP(&loginServerAddr, "server", "s",
 		"co-retro.ankama-games.com:443", "Dofus login server address")
