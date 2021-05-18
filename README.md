@@ -1,6 +1,6 @@
 # retroproxy
 
-`retroproxy` is a proxy for Dofus 1 login and game servers.
+`retroproxy` is a proxy for Dofus Retro login and game servers.
 
 ## Requirements
 
