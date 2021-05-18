@@ -86,13 +86,13 @@ func run() int {
 
 	errCh := make(chan error)
 
-	repo := retroproxy.NewCache(logger.Named("cache"))
+	storer := retroproxy.NewCache(logger.Named("cache"))
 
 	loginPx, err := login.NewProxy(
 		loginProxyAddr,
 		loginServerAddr,
 		gameProxyPublicAddr,
-		repo,
+		storer,
 		forceAdmin,
 		logger.Named("login"),
 	)
@@ -114,7 +114,7 @@ func run() int {
 
 	gamePx, err := game.NewProxy(
 		gameProxyAddr,
-		repo,
+		storer,
 		logger.Named("game"),
 	)
 	if err != nil {
@@ -136,7 +136,7 @@ func run() int {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		retroproxy.DeleteOldTicketsLoop(ctx, repo, 10*time.Second)
+		retroproxy.DeleteOldTicketsLoop(ctx, storer, 10*time.Second)
 	}()
 
 	select {

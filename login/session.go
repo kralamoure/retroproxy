@@ -153,7 +153,7 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 			}
 
 			t.IssuedAt = time.Now()
-			s.proxy.repo.SetTicket(id.String(), t)
+			s.proxy.storer.SetTicket(id.String(), t)
 
 			msg := &msgsvr.AccountSelectServerPlainSuccess{
 				Host:   s.proxy.gameHost,

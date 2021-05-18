@@ -18,7 +18,7 @@ type Proxy struct {
 	logger     *zap.Logger
 	addr       *net.TCPAddr
 	serverAddr *net.TCPAddr
-	repo       retroproxy.Repo
+	storer     retroproxy.Storer
 	forceAdmin bool
 
 	gameHost string
@@ -36,9 +36,9 @@ type proxyCache struct {
 	uuidByUsername map[string]string // guarded by proxy mu
 }
 
-func NewProxy(addr, serverAddr, gamePublicAddr string, repo retroproxy.Repo, forceAdmin bool, logger *zap.Logger) (*Proxy, error) {
-	if repo == nil {
-		return nil, errors.New("repository should not be nil")
+func NewProxy(addr, serverAddr, gamePublicAddr string, storer retroproxy.Storer, forceAdmin bool, logger *zap.Logger) (*Proxy, error) {
+	if storer == nil {
+		return nil, errors.New("storer is nil")
 	}
 
 	if logger == nil {
@@ -76,7 +76,7 @@ func NewProxy(addr, serverAddr, gamePublicAddr string, repo retroproxy.Repo, for
 		serverAddr: tcpServerAddr,
 		gameHost:   gameHost,
 		gamePort:   gamePort,
-		repo:       repo,
+		storer:     storer,
 		forceAdmin: forceAdmin,
 		cache: proxyCache{
 			serverPort:     serverPort,

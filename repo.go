@@ -5,13 +5,13 @@ import (
 	"time"
 )
 
-type Repo interface {
+type Storer interface {
 	SetTicket(id string, t Ticket)
 	UseTicket(id string) (Ticket, bool)
 	DeleteOldTickets(maxDur time.Duration)
 }
 
-func DeleteOldTicketsLoop(ctx context.Context, r Repo, maxDur time.Duration) {
+func DeleteOldTicketsLoop(ctx context.Context, r Storer, maxDur time.Duration) {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 

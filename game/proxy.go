@@ -16,16 +16,16 @@ import (
 type Proxy struct {
 	logger *zap.Logger
 	addr   *net.TCPAddr
-	repo   retroproxy.Repo
+	storer retroproxy.Storer
 
 	ln       *net.TCPListener
 	sessions map[*session]struct{}
 	mu       sync.Mutex
 }
 
-func NewProxy(addr string, repo retroproxy.Repo, logger *zap.Logger) (*Proxy, error) {
-	if repo == nil {
-		return nil, errors.New("repository is nil")
+func NewProxy(addr string, storer retroproxy.Storer, logger *zap.Logger) (*Proxy, error) {
+	if storer == nil {
+		return nil, errors.New("storer is nil")
 	}
 	if logger == nil {
 		logger = zap.NewNop()
@@ -38,7 +38,7 @@ func NewProxy(addr string, repo retroproxy.Repo, logger *zap.Logger) (*Proxy, er
 	return &Proxy{
 		logger: logger,
 		addr:   tcpAddr,
-		repo:   repo,
+		storer: storer,
 	}, nil
 }
 

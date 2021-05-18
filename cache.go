@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Cache is an implementation of Repo for an in-memory cache.
+// Cache is an implementation of Storer for an in-memory cache.
 type Cache struct {
 	logger  *zap.Logger
 	tickets map[string]Ticket
