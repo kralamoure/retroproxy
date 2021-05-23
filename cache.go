@@ -1,6 +1,7 @@
 package retroproxy
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -30,6 +31,7 @@ func (r *Cache) SetTicket(id string, t Ticket) {
 	r.tickets[id] = t
 	r.logger.Debug("ticket set",
 		zap.String("ticket_id", id),
+		zap.String("ticket", fmt.Sprintf("%+v", t)),
 	)
 }
 
