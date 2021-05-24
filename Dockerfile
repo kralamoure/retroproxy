@@ -1,4 +1,4 @@
-FROM golang:1.16.4-buster AS builder
+FROM golang:1.16-buster AS builder
 
 WORKDIR /app
 COPY . .
@@ -9,7 +9,7 @@ FROM ubuntu:20.04
 
 LABEL org.opencontainers.image.source="https://github.com/kralamoure/retroproxy"
 
-RUN apt update && apt upgrade -y
+RUN apt-get update && apt-get upgrade -y
 
 WORKDIR /app
 COPY --from=builder /go/bin/ .
