@@ -1,0 +1,44 @@
+<config>
+
+    <delay value="500"/>
+    <rdelay value="3000"/>
+    <rcount value="10"/>
+
+    <conf name="Ankama" zaapconnectport="26117">
+        <databank id="0">
+            <dataserver url="data/" type="local" priority="3"/>
+            <dataserver url="http://dofusretro.cdn.ankama.com/" priority="1"/>
+        </databank>
+        <databank id="1">
+            <dataserver url="data/" type="local" priority="3"/>
+            <dataserver url="http://dofusretro.cdn.ankama.com/temporis/" priority="1"/>
+        </databank>
+        <connserver name="proxy" ip="fedora-vm" port="5557" />
+        <connserver name="Ankama/production" ip="co-retro.ankama-games.com" port="443" />
+        <connserver name="Ankama/staging" ip="retro-co-staging.ankama-games.com" port="443" />
+    </conf>
+
+    <cacheasbitmap>
+        <cache element="ExternalContainer/InteractionCell" value="false"/>
+        <cache element="ExternalContainer/Ground" value="false"/>
+        <cache element="ExternalContainer/Object1" value="false"/>
+        <cache element="ExternalContainer/Object2" value="false"/>
+        <cache element="ExternalContainer/Zone" value="false"/>
+        <cache element="ExternalContainer/Select" value="false"/>
+        <cache element="ExternalContainer/Grid" value="false"/>
+        <cache element="ExternalContainer/Pointer" value="false"/>
+        <cache element="GAPI/UI" value="false"/>
+        <cache element="GAPI/UITop" value="false"/>
+        <cache element="GAPI/Popup" value="false"/>
+        <cache element="GAPI/UIUltimate" value="false"/>
+        <cache element="GAPI/Cursor" value="false"/>
+        <cache element="mapHandler/BACKGROUND" value="false"/>
+        <cache element="mapHandler/Cell/Ground" value="false"/>
+        <cache element="mapHandler/Cell/Object1" value="false"/>
+        <cache element="mapHandler/Cell/Object2" value="false"/>
+        <cache element="mapHandler/Cell/ObjectExternal" value="false"/>
+        <cache element="Zone/Zone" value="true"/>
+        <cache element="Zone/Pointers" value="true"/>
+    </cacheasbitmap>
+
+</config>
