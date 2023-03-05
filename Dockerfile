@@ -1,17 +1,14 @@
-FROM golang:1.20 AS builder
+FROM golang:1.20 AS build
 
-WORKDIR /app
+WORKDIR /go/src/app
 COPY . .
 
-RUN go install -v ./...
+RUN go mod download
+RUN CGO_ENABLED=0 go build -o /go/bin/retroproxy ./cmd/retroproxy
 
-FROM ubuntu:20.04
+FROM gcr.io/distroless/static-debian11:latest
 
 LABEL org.opencontainers.image.source="https://github.com/kralamoure/retroproxy"
 
-RUN apt-get update && apt-get upgrade -y
-
-WORKDIR /app
-COPY --from=builder /go/bin/ .
-
-ENTRYPOINT ["./retroproxy"]
+COPY --from=build /go/bin/retroproxy /
+ENTRYPOINT ["/retroproxy"]
