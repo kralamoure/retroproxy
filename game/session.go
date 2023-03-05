@@ -194,7 +194,7 @@ func (s *session) sendMsgToServer(msg retroproto.MsgCli) error {
 	if err != nil {
 		return err
 	}
-	s.sendPktToServer(fmt.Sprint(msg.ProtocolId(), pkt))
+	s.sendPktToServer(fmt.Sprint(msg.MessageId(), pkt))
 	return nil
 }
 
@@ -203,7 +203,7 @@ func (s *session) sendMsgToClient(msg retroproto.MsgSvr) error {
 	if err != nil {
 		return err
 	}
-	s.sendPktToClient(fmt.Sprint(msg.ProtocolId(), pkt))
+	s.sendPktToClient(fmt.Sprint(msg.MessageId(), pkt))
 	return nil
 }
 

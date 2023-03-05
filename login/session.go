@@ -30,12 +30,12 @@ type session struct {
 }
 
 type msgOutCli interface {
-	ProtocolId() (id retroproto.MsgCliId)
+	MessageId() (id retroproto.MsgCliId)
 	Serialized() (extra string, err error)
 }
 
 type msgOutSvr interface {
-	ProtocolId() (id retroproto.MsgSvrId)
+	MessageId() (id retroproto.MsgSvrId)
 	Serialized() (extra string, err error)
 }
 
@@ -245,7 +245,7 @@ func (s *session) sendMsgToServer(msg msgOutCli) error {
 	if err != nil {
 		return err
 	}
-	s.sendPktToServer(fmt.Sprint(msg.ProtocolId(), pkt))
+	s.sendPktToServer(fmt.Sprint(msg.MessageId(), pkt))
 	return nil
 }
 
@@ -254,7 +254,7 @@ func (s *session) sendMsgToClient(msg msgOutSvr) error {
 	if err != nil {
 		return err
 	}
-	s.sendPktToClient(fmt.Sprint(msg.ProtocolId(), pkt))
+	s.sendPktToClient(fmt.Sprint(msg.MessageId(), pkt))
 	return nil
 }
 
