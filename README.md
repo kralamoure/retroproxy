@@ -2,6 +2,7 @@
 
 `retroproxy` is a reverse proxy for login and game servers of Dofus Retro.
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/kralamoure/retroproxy.svg)](https://pkg.go.dev/github.com/kralamoure/retroproxy)
 [![CI](https://github.com/kralamoure/retroproxy/actions/workflows/ci.yml/badge.svg)](https://github.com/kralamoure/retroproxy/actions/workflows/ci.yml)
 
 <!-- TOC -->
