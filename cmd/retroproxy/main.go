@@ -152,7 +152,7 @@ func loadVars() error {
 	flags := pflag.NewFlagSet("retroproxy", pflag.ContinueOnError)
 	flags.BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
 	flags.StringVarP(&loginServerAddr, "server", "s",
-		"co-retro.ankama-games.com:443", "Dofus login server address")
+		"dofusretro-co-production.ankama-games.com:443", "Dofus login server address")
 	flags.StringVarP(&loginProxyAddr, "login", "l", "0.0.0.0:5555", "Dofus login proxy listener address")
 	flags.StringVarP(&gameProxyAddr, "game", "g", "0.0.0.0:5556", "Dofus game proxy listener address")
 	flags.StringVarP(&gameProxyPublicAddr, "public", "p", "127.0.0.1:5556", "Dofus game proxy public address")

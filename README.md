@@ -29,7 +29,7 @@ retroproxy --help
 ```text
 Usage of retroproxy:
   -d, --debug           Enable debug mode
-  -s, --server string   Dofus login server address (default "co-retro.ankama-games.com:443")
+  -s, --server string   Dofus login server address (default "dofusretro-co-production.ankama-games.com:443")
   -l, --login string    Dofus login proxy listener address (default "0.0.0.0:5555")
   -g, --game string     Dofus game proxy listener address (default "0.0.0.0:5556")
   -p, --public string   Dofus game proxy public address (default "127.0.0.1:5556")

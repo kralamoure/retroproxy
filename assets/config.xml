@@ -14,7 +14,7 @@
             <dataserver url="http://dofusretro.cdn.ankama.com/temporis/" priority="1"/>
         </databank>
         <connserver name="proxy" ip="localhost" port="5555" />
-        <connserver name="Ankama/production" ip="co-retro.ankama-games.com" port="443" />
+        <connserver name="Ankama/production" ip="dofusretro-co-production.ankama-games.com" port="443" />
         <connserver name="Ankama/staging" ip="retro-co-staging.ankama-games.com" port="443" />
     </conf>
 
