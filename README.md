@@ -4,6 +4,16 @@
 
 `retroproxy` is a reverse proxy for login and game servers of Dofus Retro.
 
+<!-- TOC -->
+* [retroproxy](#retroproxy)
+  * [Build](#build)
+  * [Installation](#installation)
+  * [Usage](#usage)
+    * [Printing usage help](#printing-usage-help)
+    * [Starting the proxy](#starting-the-proxy)
+    * [Connecting to the proxy](#connecting-to-the-proxy)
+<!-- TOC -->
+
 ## Build
 
 ```sh
@@ -20,7 +30,7 @@ replacing the original one.
 
 ## Usage
 
-### Print help
+### Printing usage help
 
 ```sh
 docker run --rm ghcr.io/kralamoure/retroproxy:latest --help
@@ -38,8 +48,15 @@ Usage of retroproxy:
   -a, --admin           Force admin mode on the client
 ```
 
-### Start proxy
+### Starting the proxy
 
 ```sh
 docker run --name retroproxy -p 5555-5556:5555-5556 -d ghcr.io/kralamoure/retroproxy:latest
 ```
+
+### Connecting to the proxy
+
+1. Go to Dofus Retro in the Ankama Launcher and press the `Play` button.
+   ![Dofus Retro in Ankama Launcher](assets/images/launcher.png)
+2. After Dofus Retro has launched, select the `With Launcher` -> `Local` configuration and press the `OK` button.
+   ![Configuration screen of Dofus Retro](assets/images/configuration.png)
