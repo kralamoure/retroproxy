@@ -5,13 +5,12 @@
 `retroproxy` is a reverse proxy for login and game servers of Dofus Retro.
 
 <!-- TOC -->
-* [retroproxy](#retroproxy)
-  * [Build](#build)
-  * [Installation](#installation)
-  * [Usage](#usage)
-    * [Printing usage help](#printing-usage-help)
-    * [Starting the proxy](#starting-the-proxy)
-    * [Connecting to the proxy](#connecting-to-the-proxy)
+* [Build](#build)
+* [Installation](#installation)
+* [Usage](#usage)
+  * [Printing usage help](#printing-usage-help)
+  * [Starting the proxy](#starting-the-proxy)
+  * [Connecting to the proxy](#connecting-to-the-proxy)
 <!-- TOC -->
 
 ## Build
