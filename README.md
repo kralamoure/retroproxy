@@ -5,14 +5,12 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/kralamoure/retroproxy.svg)](https://pkg.go.dev/github.com/kralamoure/retroproxy)
 [![CI](https://github.com/kralamoure/retroproxy/actions/workflows/ci.yml/badge.svg)](https://github.com/kralamoure/retroproxy/actions/workflows/ci.yml)
 
-<!-- TOC -->
-* [Build](#build)
-* [Installation](#installation)
-* [Usage](#usage)
-  * [Printing usage help](#printing-usage-help)
-  * [Starting the proxy](#starting-the-proxy)
-  * [Connecting to the proxy](#connecting-to-the-proxy)
-<!-- TOC -->
+- [Build](#build)
+- [Installation](#installation)
+- [Usage](#usage)
+    - [Printing usage help](#printing-usage-help)
+    - [Starting the proxy](#starting-the-proxy)
+    - [Connecting to the proxy](#connecting-to-the-proxy)
 
 ## Build
 
@@ -58,5 +56,5 @@ docker run --name retroproxy -p 5555-5556:5555-5556 -d ghcr.io/kralamoure/retrop
 
 1. Go to Dofus Retro in the Ankama Launcher and press the `Play` button.
    ![Dofus Retro in Ankama Launcher](assets/images/launcher.png)
-2. After Dofus Retro has launched, select the `With Launcher` -> `Local` configuration and press the `OK` button.
+2. After Dofus Retro has launched, select the `With Launcher` → `Local` configuration and press the `OK` button.
    ![Configuration screen of Dofus Retro](assets/images/configuration.png)
