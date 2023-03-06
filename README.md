@@ -1,8 +1,8 @@
 # retroproxy
 
-[![CI](https://github.com/kralamoure/retroproxy/actions/workflows/ci.yml/badge.svg)](https://github.com/kralamoure/retroproxy/actions/workflows/ci.yml)
-
 `retroproxy` is a reverse proxy for login and game servers of Dofus Retro.
+
+[![CI](https://github.com/kralamoure/retroproxy/actions/workflows/ci.yml/badge.svg)](https://github.com/kralamoure/retroproxy/actions/workflows/ci.yml)
 
 <!-- TOC -->
 * [Build](#build)
