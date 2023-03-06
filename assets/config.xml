@@ -4,7 +4,7 @@
     <rdelay value="3000"/>
     <rcount value="10"/>
 
-    <conf name="Ankama" zaapconnectport="26117">
+    <conf name="With Launcher" zaapconnectport="26117">
         <databank id="0">
             <dataserver url="data/" type="local" priority="3"/>
             <dataserver url="http://dofusretro.cdn.ankama.com/" priority="1"/>
@@ -13,9 +13,21 @@
             <dataserver url="data/" type="local" priority="3"/>
             <dataserver url="http://dofusretro.cdn.ankama.com/temporis/" priority="1"/>
         </databank>
-        <connserver name="proxy" ip="localhost" port="5555" />
-        <connserver name="Ankama/production" ip="dofusretro-co-production.ankama-games.com" port="443" />
-        <connserver name="Ankama/staging" ip="retro-co-staging.ankama-games.com" port="443" />
+        <connserver name="Local" ip="localhost" port="5555"/>
+        <connserver name="Ankama" ip="dofusretro-co-production.ankama-games.com" port="443"/>
+    </conf>
+
+    <conf name="Without Launcher">
+        <databank id="0">
+            <dataserver url="data/" type="local" priority="3"/>
+            <dataserver url="http://dofusretro.cdn.ankama.com/" priority="1"/>
+        </databank>
+        <databank id="1">
+            <dataserver url="data/" type="local" priority="3"/>
+            <dataserver url="http://dofusretro.cdn.ankama.com/temporis/" priority="1"/>
+        </databank>
+        <connserver name="Local" ip="localhost" port="5555"/>
+        <connserver name="Ankama" ip="dofusretro-co-production.ankama-games.com" port="443"/>
     </conf>
 
     <cacheasbitmap>
