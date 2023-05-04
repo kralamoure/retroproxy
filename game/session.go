@@ -139,19 +139,36 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 	return nil
 }
 
-func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
-	id, ok := retroproto.MsgCliIdByPkt(pkt)
+func (s *session) handlePktFromClient(ctx context.Context, rawPacket string) error {
+	packet := rawPacket
+
+	// unknownToken seems to wrap a base64 encoded string sent by the client as the prefix of some types of packet.
+	// That mechanism was introduced by a new client version, but it's not clear to me which version or why.
+	// Maybe it's some kind of signature mechanism.
+	const unknownToken = "ù"
+	if strings.HasPrefix(packet, unknownToken) {
+		const index = 2
+		substrings := strings.SplitN(packet, unknownToken, index+1)
+		if len(substrings) != index+1 {
+			s.proxy.logger.Warn("invalid packet but won't discard it")
+		} else {
+			packet = substrings[index]
+		}
+	}
+
+	id, ok := retroproto.MsgCliIdByPkt(packet)
 	name, _ := retroproto.MsgCliNameByID(id)
 	s.proxy.logger.Info("received packet from client",
 		zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		zap.String("message_name", name),
-		zap.String("packet", pkt),
+		zap.String("packet", packet),
+		zap.String("raw_packet", rawPacket),
 	)
 	if s.firstPkt && !ok {
 		return errors.New("invalid first packet")
 	}
 	if ok {
-		extra := strings.TrimPrefix(pkt, string(id))
+		extra := strings.TrimPrefix(packet, string(id))
 		switch id {
 		case retroproto.AccountSendTicket:
 			if !s.firstPkt {
@@ -185,7 +202,7 @@ func (s *session) handlePktFromClient(ctx context.Context, pkt string) error {
 	case <-ctx.Done():
 		return ctx.Err()
 	}
-	s.sendPktToServer(pkt)
+	s.sendPktToServer(rawPacket)
 	return nil
 }
 
@@ -207,15 +224,32 @@ func (s *session) sendMsgToClient(msg retroproto.MsgSvr) error {
 	return nil
 }
 
-func (s *session) sendPktToServer(pkt string) {
-	id, _ := retroproto.MsgCliIdByPkt(pkt)
+func (s *session) sendPktToServer(rawPacket string) {
+	packet := rawPacket
+
+	// unknownToken seems to wrap a base64 encoded string sent by the client as the prefix of some types of packet.
+	// That mechanism was introduced by a new client version, but it's not clear to me which version or why.
+	// Maybe it's some kind of signature mechanism.
+	const unknownToken = "ù"
+	if strings.HasPrefix(packet, unknownToken) {
+		const index = 2
+		substrings := strings.SplitN(packet, unknownToken, index+1)
+		if len(substrings) != index+1 {
+			s.proxy.logger.Warn("invalid packet but won't discard it")
+		} else {
+			packet = substrings[index]
+		}
+	}
+
+	id, _ := retroproto.MsgCliIdByPkt(packet)
 	name, _ := retroproto.MsgCliNameByID(id)
 	s.proxy.logger.Info("sent packet to server",
 		zap.String("server_address", s.serverConn.RemoteAddr().String()),
 		zap.String("message_name", name),
-		zap.String("packet", pkt),
+		zap.String("packet", packet),
+		zap.String("raw_packet", rawPacket),
 	)
-	fmt.Fprint(s.serverConn, pkt+"\n\x00")
+	fmt.Fprint(s.serverConn, rawPacket+"\n\x00")
 }
 
 func (s *session) sendPktToClient(pkt string) {
