@@ -116,14 +116,14 @@ func (s *session) receivePktsFromClient(ctx context.Context) error {
 	}
 }
 
-func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
-	id, ok := retroproto.MsgSvrIdByPkt(pkt)
+func (s *session) handlePktFromServer(ctx context.Context, packet string) error {
+	id, ok := retroproto.MsgSvrIdByPkt(packet)
 	name, _ := retroproto.MsgSvrNameByID(id)
 	s.proxy.logger.Info("received packet from server",
 		zap.String("server_address", s.serverConn.RemoteAddr().String()),
 		zap.String("client_address", s.clientConn.RemoteAddr().String()),
 		zap.String("message_name", name),
-		zap.String("packet", pkt),
+		zap.String("packet", packet),
 	)
 	if ok {
 		switch id {
@@ -133,9 +133,32 @@ func (s *session) handlePktFromServer(ctx context.Context, pkt string) error {
 				return err
 			}
 			return nil
+		case retroproto.GameMovement:
+			extra := strings.TrimPrefix(packet, string(id))
+
+			msg := &msgsvr.GameMovement{}
+			err := msg.Deserialize(extra)
+			if err != nil {
+				return err
+			}
+
+			for _, sprite := range msg.Sprites {
+				if sprite.Fight {
+					continue
+				}
+				if sprite.Type < 1 {
+					continue
+				}
+				s.proxy.logger.Debug("character spotted",
+					zap.String("character_name", sprite.Character.Name),
+					zap.Int("character_level", sprite.Character.Level),
+				)
+			}
 		}
 	}
-	s.sendPktToClient(pkt)
+
+	s.sendPktToClient(packet)
+
 	return nil
 }
 
