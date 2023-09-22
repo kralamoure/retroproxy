@@ -15,8 +15,9 @@
         </databank>
         <connserver name="development" ip="localhost" port="5557"/>
         <connserver name="proxy" ip="localhost" port="5555"/>
-        <connserver name="Ankama/production" ip="co-retro.ankama-games.com" port="443"/>
+        <connserver name="Ankama/production" ip="dofusretro-co-production.ankama-games.com" port="443"/>
         <connserver name="Ankama/staging" ip="retro-co-staging.ankama-games.com" port="443"/>
+        <connserver name="Dofus Alive" ip="login.dofusalive.com" port="32100"/>
     </conf>
 
     <conf name="Ankama">
@@ -30,8 +31,9 @@
         </databank>
         <connserver name="development" ip="localhost" port="5557"/>
         <connserver name="proxy" ip="localhost" port="5555"/>
-        <connserver name="Ankama/production" ip="co-retro.ankama-games.com" port="443"/>
+        <connserver name="Ankama/production" ip="dofusretro-co-production.ankama-games.com" port="443"/>
         <connserver name="Ankama/staging" ip="retro-co-staging.ankama-games.com" port="443"/>
+        <connserver name="Dofus Alive" ip="login.dofusalive.com" port="32100"/>
     </conf>
 
     <conf name="Local with Launcher" zaapconnectport="26117">
@@ -45,8 +47,9 @@
         </databank>
         <connserver name="development" ip="localhost" port="5557"/>
         <connserver name="proxy" ip="localhost" port="5555"/>
-        <connserver name="Ankama/production" ip="co-retro.ankama-games.com" port="443"/>
+        <connserver name="Ankama/production" ip="dofusretro-co-production.ankama-games.com" port="443"/>
         <connserver name="Ankama/staging" ip="retro-co-staging.ankama-games.com" port="443"/>
+        <connserver name="Dofus Alive" ip="login.dofusalive.com" port="32100"/>
     </conf>
 
     <conf name="Local">
@@ -60,24 +63,25 @@
         </databank>
         <connserver name="development" ip="localhost" port="5557"/>
         <connserver name="proxy" ip="localhost" port="5555"/>
-        <connserver name="Ankama/production" ip="co-retro.ankama-games.com" port="443"/>
+        <connserver name="Ankama/production" ip="dofusretro-co-production.ankama-games.com" port="443"/>
         <connserver name="Ankama/staging" ip="retro-co-staging.ankama-games.com" port="443"/>
+        <connserver name="Dofus Alive" ip="login.dofusalive.com" port="32100"/>
     </conf>
 
     <cacheasbitmap>
-        <cache element="ExternalContainer/InteractionCell" value="false"/>
-        <cache element="ExternalContainer/Ground" value="false"/>
-        <cache element="ExternalContainer/Object1" value="false"/>
-        <cache element="ExternalContainer/Object2" value="false"/>
-        <cache element="ExternalContainer/Zone" value="false"/>
+        <cache element="ExternalContainer/InteractionCell" value="true"/>
+        <cache element="ExternalContainer/Ground" value="true"/>
+        <cache element="ExternalContainer/Object1" value="true"/>
+        <cache element="ExternalContainer/Object2" value="true"/>
+        <cache element="ExternalContainer/Zone" value="true"/>
         <cache element="ExternalContainer/Select" value="false"/>
-        <cache element="ExternalContainer/Grid" value="false"/>
-        <cache element="ExternalContainer/Pointer" value="false"/>
+        <cache element="ExternalContainer/Grid" value="true"/>
+        <cache element="ExternalContainer/Pointer" value="true"/>
         <cache element="GAPI/UI" value="false"/>
         <cache element="GAPI/UITop" value="false"/>
         <cache element="GAPI/Popup" value="false"/>
         <cache element="GAPI/UIUltimate" value="false"/>
-        <cache element="GAPI/Cursor" value="false"/>
+        <cache element="GAPI/Cursor" value="true"/>
         <cache element="mapHandler/BACKGROUND" value="false"/>
         <cache element="mapHandler/Cell/Ground" value="false"/>
         <cache element="mapHandler/Cell/Object1" value="false"/>
@@ -85,6 +89,7 @@
         <cache element="mapHandler/Cell/ObjectExternal" value="false"/>
         <cache element="Zone/Zone" value="true"/>
         <cache element="Zone/Pointers" value="true"/>
+        <cache element="Controls/Loader" value="true"/>
     </cacheasbitmap>
 
 </config>
