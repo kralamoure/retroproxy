@@ -89,7 +89,7 @@
         <cache element="mapHandler/Cell/ObjectExternal" value="false"/>
         <cache element="Zone/Zone" value="true"/>
         <cache element="Zone/Pointers" value="true"/>
-        <cache element="Controls/Loader" value="true"/>
+        <cache element="Controls/Loader" value="false"/>
     </cacheasbitmap>
 
 </config>
